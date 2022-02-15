@@ -20,10 +20,10 @@ public class RandomPoints : MonoBehaviour
         radiusOut = 50;
         radiusIn = 10;
         // Set Area Clamp Position
-        maxPosX = 70;
-        maxPosZ = 20;
-        minPosX = -45;
-        minPosZ = -70;
+        maxPosX = 90;
+        maxPosZ = 90;
+        minPosX = -90;
+        minPosZ = -90;
     }
 
     // Update is called once per frame

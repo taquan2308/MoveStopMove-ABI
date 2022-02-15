@@ -9,9 +9,14 @@ public class Arrow2 : MonoBehaviour
     [HideInInspector] public float speedArrow2;
      public Vector3 targetPosition;
     [HideInInspector] public Vector3 dirrectVector3;
+    [HideInInspector] public Vector3 offsetPositionEnemy;
     //
     public Vector3 enemyPos;
     public GameObject emptyGameObjPrefabs;
+    private void Awake()
+    {
+        offsetPositionEnemy = new Vector3(0, 1.26f, 0);
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -31,7 +36,7 @@ public class Arrow2 : MonoBehaviour
     public void SetTaget(Transform _targetTrans)
     {
         //GameObject targetPosition = (GameObject) Instantiate(emptyGameObjPrefabs, _targetTrans.position, targetTrans.rotation);
-        targetPosition = _targetTrans.position;
+        targetPosition = _targetTrans.position + offsetPositionEnemy;
         //enemyPos = _targetTrans.position;
         ////targetTrans.position = new Vector3(_targetTrans.position.x, _targetTrans.position.y, _targetTrans.position.z);
         //targetTrans.position = enemyPos;
