@@ -12,7 +12,6 @@ public class Player : Character
     [HideInInspector] public Vector3 cameraPosOffset;
     private GameObject[] enemys;
     [SerializeField] private Joystick Joystick;// must drag from Child Canvas have Prefabs 1 on 4 type Stick( float, fixed,..)
-    [SerializeField] private float playerRangerAttack = 8;
     [SerializeField] private float speed = 30;
     [SerializeField] private float turnSpeed;
     [SerializeField] private bool isRun;
@@ -30,21 +29,29 @@ public class Player : Character
     //[HideInInspector] 
     [HideInInspector] public Transform NearestEnemyFromPlayerTrans;
     public float rangeAttack;
+    public int experience;
     public PlayerSO playerso;
     public Transform pointFire;
     public float timeStart;
     public float timeCountdownt;
-    
-    // Start is called before the first frame update
-    void Start()
+
+    // show Circle around Player
+    [HideInInspector] public DrawCircle drawCircle;
+    public GameObject cirleObjectCanvas;
+    public GameManager2 gameManager2;
+
+    private void Awake()
     {
+        drawCircle = GetComponent<DrawCircle>();
         agent = GetComponent<NavMeshAgent>();
         playerRb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
         cameraPosOffset = new Vector3(20f, 15f, 0);
+        cameraPos.position = transform.position + cameraPosOffset;
         playerOldPos = transform.position;
         //attack
         rangeAttack = playerso.rangeAttack;
+        experience = playerso.experience;
         //Countdownt attack
         timeStart = playerso.speedAttack;
         timeCountdownt = 0;
@@ -52,11 +59,23 @@ public class Player : Character
         isMove = false;
         //
         turnSpeed = playerso.turnSpeed;
+        // circle on foot
+        cirleObjectCanvas.SetActive( false );
+
+
+    }
+    // Start is called before the first frame update
+    void Start()
+    {
     }
 
     // Update is called once per frame
     void Update()
     {
+        // Grow
+        Grow();
+        //DrawCircle
+        drawCircle.DrawCircleMethod(gameObject, rangeAttack, 1);
         // Find Enemy array
         enemys = GameObject.FindGameObjectsWithTag("Enemy");
         // Move Player
@@ -72,7 +91,7 @@ public class Player : Character
                 if (enemy != null)
                 {
                     Vector3 dir = enemy.transform.position - transform.position;
-                    if (dir.magnitude < playerRangerAttack)
+                    if (dir.magnitude < rangeAttack)
                     {
                         //animator.SetBool("isAttack", true);
                         //return;
@@ -92,7 +111,7 @@ public class Player : Character
             isMove = true;
             // Move if JoyStick change
             MoveCharater();
-            // Set position Behind Player
+            // ---------Set position Behind Player--- change caculator to slerp----
             cameraPos.position = transform.position + cameraPosOffset;
         }
         //attack
@@ -108,52 +127,53 @@ public class Player : Character
         //Ckeck ------ timecoundownt and have enemyNearest, isMove?
         if (timeCountdownt <= 0 && NearestEnemyFromPlayerTrans != null && isMove == false)
         {
-            AttackCharater();
-            timeCountdownt = timeStart;
+            if (((NearestEnemyFromPlayerTrans.transform.position - transform.position).magnitude - rangeAttack) <= 0)
+            {
+                AttackCharater();
+                timeCountdownt = timeStart;
+            }
         }
         else
         {
             timeCountdownt -= Time.deltaTime;
         }
-        //
+        //Circle foot
+        if (NearestEnemyFromPlayerTrans != null)
+        {
+            cirleObjectCanvas.transform.position = NearestEnemyFromPlayerTrans.position;
+            cirleObjectCanvas.SetActive(true);
+        }
+        else
+        {
+            cirleObjectCanvas.SetActive(false);
+        }
     }
     public override void MoveCharater()
     {
         //override the ParentClass implementation here
         direction = Joystick.Direction;
         directionMove = new Vector3( -direction.y, 0, direction.x );
-        agent.destination = transform.position + directionMove * Time.deltaTime * speed;
+        agent.destination = transform.position + directionMove.normalized * Time.deltaTime * speed;
     }
     public void FindNearestEnemy()
     {
-        Collider[] colliders = Physics.OverlapSphere(transform.position, rangeAttack);//  colliders has on Sphere   rangeAttack
-        // Set collider = null if only Player'Collider in range attack of player
-            int maxColliders = 10;
-            Collider[] hitColliders = new Collider[maxColliders];
-            int numberColliderInRangePlayer = Physics.OverlapSphereNonAlloc(transform.position, rangeAttack, hitColliders);
-            // if in Range attack Player no enemy, not assign EnemyNearest = null
-            if(numberColliderInRangePlayer <= 1)
-            {
-                colliders = null;
-            }
-        //
-        float distance = Mathf.Infinity;
-        Vector3 directToEnemy;
-        if(colliders != null)
+        
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        float shortestDistance = Mathf.Infinity;
+        GameObject nearestEnemy = null;
+        foreach (GameObject enemy in enemies)
         {
-            foreach (Collider collider in colliders)
+            float distanceToEnemy = Vector3.Distance(transform.position, enemy.transform.position);
+            if (distanceToEnemy < shortestDistance)
             {
-                directToEnemy = transform.position - collider.gameObject.transform.position;
-                if (collider.CompareTag("Enemy"))
-                {
-                    if(directToEnemy.magnitude < distance)
-                    {
-                        NearestEnemyFromPlayerTrans = collider.gameObject.transform;
-                        distance = directToEnemy.magnitude;
-                        //Debug.Log(distance);
-                    }
-                }
+                shortestDistance = distanceToEnemy;
+                nearestEnemy = enemy;
             }
+        }
+
+        if (nearestEnemy != null && shortestDistance <= rangeAttack)
+        {
+            NearestEnemyFromPlayerTrans = nearestEnemy.transform;
         }
         else
         {
@@ -164,9 +184,14 @@ public class Player : Character
     //
     public override void AttackCharater()
     {
-        GameObject arrow2 = (GameObject) Instantiate(playerso.arrowPrefabs, pointFire.position, playerso.arrowPrefabs.transform.rotation);
-        arrow2.GetComponent<Arrow2>().SetTaget(NearestEnemyFromPlayerTrans);
-        Destroy(arrow2, 3);
+        //
+        //GameObject arrow2 = (GameObject) Instantiate(playerso.arrowPrefabs, pointFire.position, playerso.arrowPrefabs.transform.rotation);
+        GameObject arrow2 = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(playerso.arrowPrefabs);
+        arrow2.transform.position = pointFire.position;
+        arrow2.transform.rotation = playerso.arrowPrefabs.transform.rotation;
+        //
+        arrow2.GetComponent<Arrow2>().SetTaget(NearestEnemyFromPlayerTrans, rangeAttack, gameObject.name, gameObject.GetInstanceID());
+        //Destroy(arrow2, 3);
     }
     public void LockOntarget()
     {
@@ -179,7 +204,15 @@ public class Player : Character
             transform.rotation = Quaternion.Euler(0f, rotation.y, 0f);
         }
     }
-    //DrawWireSphere
+    //Grow
+    public void Grow()
+    {
+        if(playerso.experience > 2)
+        {
+            //transform.localScale = new Vector3(1 + playerso.experience / 100, 1 + playerso.experience / 100, 1 + playerso.experience / 100);
+        }
+    }
+    
 #if UNITY_EDITOR
 
     private void OnDrawGizmos()
@@ -190,3 +223,47 @@ public class Player : Character
 
 #endif
 }
+
+
+
+
+
+
+
+
+
+
+//Collider[] colliders = Physics.OverlapSphere(transform.position, rangeAttack);//  colliders has on Sphere   rangeAttack
+//// Set collider = null if only Player'Collider in range attack of player
+//    int maxColliders = 10;
+//    Collider[] hitColliders = new Collider[maxColliders];
+//    int numberColliderInRangePlayer = Physics.OverlapSphereNonAlloc(transform.position, rangeAttack, hitColliders);
+//    // if in Range attack Player no enemy, not assign EnemyNearest = null
+//    if(numberColliderInRangePlayer <= 1)
+//    {
+//        colliders = null;
+//    }
+////
+//float distance = Mathf.Infinity;
+//Vector3 directToEnemy;
+//if(colliders != null)
+//{
+//    foreach (Collider collider in colliders)
+//    {
+//        directToEnemy = transform.position - collider.gameObject.transform.position;
+//        if (collider.CompareTag("Enemy"))
+//        {
+//            if(directToEnemy.magnitude < distance)
+//            {
+//                NearestEnemyFromPlayerTrans = collider.gameObject.transform;
+//                distance = directToEnemy.magnitude;
+//                //Debug.Log(distance);
+//            }
+//        }
+//    }
+//}
+//else
+//{
+//    NearestEnemyFromPlayerTrans = null;
+//}
+//----------------------------------------------------

@@ -6,13 +6,14 @@ public class RoteItself : MonoBehaviour
 {
     [HideInInspector] public Arrow2 arrow2;
     [HideInInspector] public bool isRoteArrow;
-    public GameObject objectRote;
+    public Transform objectRoteTrans;
     [HideInInspector] public int speedRote;
     private void Awake()
     {
         arrow2 = GetComponent<Arrow2>();
         isRoteArrow = arrow2.arrowSO2.isRoteArrow;
         speedRote = arrow2.arrowSO2.speedRote;
+        objectRoteTrans = gameObject.GetComponentInChildren<Transform>();
     }
     // Start is called before the first frame update
     void Start()
@@ -27,6 +28,6 @@ public class RoteItself : MonoBehaviour
     }
     public void RoteAround()
     {
-        objectRote.transform.RotateAround(objectRote.transform.position, Vector3.up, speedRote * Time.deltaTime);
+        objectRoteTrans.RotateAround(objectRoteTrans.position, Vector3.up, speedRote * Time.deltaTime);
     }
 }

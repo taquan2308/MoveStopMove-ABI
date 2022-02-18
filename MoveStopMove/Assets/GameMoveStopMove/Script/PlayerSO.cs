@@ -8,4 +8,5 @@ public class PlayerSO : ScriptableObject
     public GameObject arrowPrefabs;
     public float speedAttack;
     public float turnSpeed;// roll character
+    public int experience;
 }

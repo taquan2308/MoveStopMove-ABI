@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c6a420b391e82a4bba5eb27f289dae5, type: 3}
   m_Name: PlayerSO
   m_EditorClassIdentifier: 
-  rangeAttack: 100
+  rangeAttack: 10
   arrowPrefabs: {fileID: 2259503943243283524, guid: 06f17e9305ce1a541b5a07e6494e5bae, type: 3}
   speedAttack: 0.5
   turnSpeed: 20
+  experience: 20
