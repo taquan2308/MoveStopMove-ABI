@@ -4,8 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Enemy
   - SpawArrow
+  - Enemy
+  - Cup
+  - UiManager
   layers:
   - Default
   - TransparentFX
