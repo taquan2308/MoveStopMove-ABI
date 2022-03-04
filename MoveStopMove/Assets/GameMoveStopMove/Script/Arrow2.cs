@@ -44,15 +44,9 @@ public class Arrow2 : MonoBehaviour
     }
     public void SetTaget(Vector3 _targetPosition, float _rangeAttack, int _iDOwner)
     {
-        //GameObject targetPosition = (GameObject) Instantiate(emptyGameObjPrefabs, _targetTrans.position, targetTrans.rotation);
         targetPosition = _targetPosition + offsetPositionTarget;
         rangeAttack = _rangeAttack;
-        //nameOfArrowOwner = _nameOfArrowOwner;
         iDOwner = _iDOwner;
-        //enemyPos = _targetTrans.position;
-        ////targetTrans.position = new Vector3(_targetTrans.position.x, _targetTrans.position.y, _targetTrans.position.z);
-        //targetTrans.position = enemyPos;
-
     }
     public void MoveArrow2()
     {
@@ -76,33 +70,29 @@ public class Arrow2 : MonoBehaviour
         //
         if ((targetPosition - transform.position).magnitude <= 0.1f)
         {
-            //Destroy(gameObject);
             gameObject.SetActive(false);
+            //Reset is firt setup for next time active
+            isFirtSetUp = true;
         }
     }
     private void OnTriggerEnter(Collider other)
     {
-        //Debug.Log("ZZZZZZZZZ       " + other.gameObject.name);
-        //check attack
-        if (((int)iDOwner - (int)other.gameObject.GetInstanceID()) == 0)
+        //check attack, dèault iDOwner = 0 if not yet asign
+        if (iDOwner == 0 || ((int)iDOwner - (int)other.gameObject.GetInstanceID()) == 0)
         {
             return;
         }
-        //Debug.Log("ZZZZZZZZZ       " + (other.gameObject.CompareTag("Enemy") || other.gameObject.CompareTag("Player") && ((int)iDOwner - (int)other.gameObject.GetInstanceID()) == 0));
         if ( other.gameObject.CompareTag("Enemy") || other.gameObject.CompareTag("Player") && ((int)iDOwner - (int)other.gameObject.GetInstanceID()) != 0)
         {
-            //Debug.Log("ZZZZZZZZZ       "+other.gameObject.name);
             GameObject[] enemyArr = GameObject.FindGameObjectsWithTag("Enemy");
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             // Increase rangeAttack and experience if look name Owner of Arrow
             GameObject[] enemiesAll = new GameObject[enemyArr.Length + 1];
-            //Debug.Log(enemyArr[0].gameObject.name);
             for (int i = 0; i < enemyArr.Length; i++)
             {
                 if (gameObject.GetInstanceID() != enemyArr[i].GetInstanceID())
                 {
                     enemiesAll[i] = enemyArr[i];
-                    //Debug.Log("==========" + enemiesAll[i].name);
                 }
             }
             if(player != null)
@@ -119,24 +109,17 @@ public class Arrow2 : MonoBehaviour
             }
             foreach (GameObject obj in enemiesAll)
             {
-                //if (obj.gameObject.CompareTag("Enemy"))
-                //{
-                //    Debug.Log("ZZZZZZZZZ");
-                //}
+               
                 if(obj != null)
                 {
                     if(obj.GetInstanceID() == iDOwner)
                     {
                         if(obj.GetComponent<Player>() != null)
                         {
-                            //Debug.Log(other.gameObject.name);
                             obj.GetComponent<Player>().rangeAttack += obj.GetComponent<Player>().rangeAttack * rangeAdd;
-                            //obj.GetComponent<Player>().experience += obj.GetComponent<Player>().experience * experienceAdd;
                             obj.GetComponent<Player>().experience += 2;
                             obj.GetComponent<Player>().isAddExp = true;
                             obj.GetComponent<Player>().isEffect = true;
-                            Debug.Log("ZZZZZZZZZ");
-                            //obj.GetComponent<Player>().SetDead();
                             obj.GetComponent<Player>().PlayDieAudio();
                             //
                             // Destroy Enemy
@@ -149,14 +132,12 @@ public class Arrow2 : MonoBehaviour
                                 other.GetComponent<Enemy>().DieLater();
                             }
                             //
-                            //Destroy(other.gameObject);
                             gameObject.SetActive(false);
                         }
                         if (obj.GetComponent<Enemy>() != null)
                         {
                             obj.GetComponent<Enemy>().rangeAttack += obj.GetComponent<Enemy>().rangeAttack * rangeAdd;
                             obj.GetComponent<Enemy>().experience += 2;
-                            //obj.GetComponent<Enemy>().experience += obj.GetComponent<Enemy>().experience * experienceAdd;
                             obj.GetComponent<Enemy>().isAddExp = true;
                             obj.GetComponent<Enemy>().isEffect = true;
                             obj.GetComponent<Enemy>().PlayDieAudio();
@@ -175,7 +156,16 @@ public class Arrow2 : MonoBehaviour
                     }
                 }
             }
+            gameObject.SetActive(false);
         }
         
     }
 }
+
+//private void OnTriggerEnter(Collider other)
+//{
+//        //Debug.Log("ZZZZZZZZZ       " + other.gameObject.name);
+//        //if (((int)iDOwner - (int)other.gameObject.GetInstanceID()) == 0)
+//        //{
+//        //    return;
+//        //}

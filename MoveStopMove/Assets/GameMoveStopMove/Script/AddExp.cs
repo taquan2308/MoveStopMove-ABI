@@ -19,12 +19,6 @@ public class AddExp : MonoBehaviour
         canvasExpTrans = gameObject.GetComponentInChildren<Transform>();
         t = Time.time;
     }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     void Update()
     {
@@ -34,5 +28,8 @@ public class AddExp : MonoBehaviour
             gameObject.SetActive(false);
         }
     }
-    
+    private void OnEnable()
+    {
+        t = Time.time;
+    }
 }

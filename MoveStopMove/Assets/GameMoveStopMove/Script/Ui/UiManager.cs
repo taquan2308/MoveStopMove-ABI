@@ -15,19 +15,12 @@ public class UiManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        canvasRightTop.SetActive(false);
+        canvasRightTop.SetActive(true);
         canvasCenterBoot.SetActive(true);
         canvasWeapon.SetActive(false);
         canvasSkinShop.SetActive(false);
-        //mainCamera.SetActive(false);
         subCamera01.SetActive(false);
         play = false;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
     private void OnEnable()
     {
@@ -35,7 +28,6 @@ public class UiManager : MonoBehaviour
         canvasCenterBoot.SetActive(false);
         canvasWeapon.SetActive(false);
         canvasSkinShop.SetActive(false);
-        //mainCamera.SetActive(false);
         subCamera01.SetActive(false);
     }
 }

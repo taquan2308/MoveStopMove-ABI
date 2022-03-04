@@ -23950,8 +23950,9 @@ GameObject:
   m_Component:
   - component: {fileID: 9021237703338614638}
   - component: {fileID: 8981547156933341328}
+  - component: {fileID: -683628186289121350}
   m_Layer: 0
-  m_Name: SummonMagicCircle3
+  m_Name: AddEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23989,3 +23990,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7794c33cb087bc44947938f6f33fe47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &-683628186289121350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9021237703338640206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dbac2ae4ac183a643b804484f0ba16d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  t: 0

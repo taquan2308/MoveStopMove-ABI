@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.AI;
 public class Player : Character
@@ -12,17 +12,14 @@ public class Player : Character
     [HideInInspector] public Vector3 playerOldPos;
     [HideInInspector] public Vector3 cameraPosOffset;
     private GameObject[] enemys;
-    [SerializeField] private Joystick Joystick;// must drag from Child Canvas have Prefabs 1 on 4 type Stick( float, fixed,..)
-    [SerializeField] private float speed = 30;
+    [SerializeField] private Joystick Joystick;
+    [SerializeField] private float speed;
     [SerializeField] private float turnSpeed;
     [SerializeField] private bool isRun;
     [SerializeField] private Vector2 direction;
     [SerializeField] private Vector3 directionMove;
-    [SerializeField] private Vector3 dir;
-
     private float horizontalInput;
     private float forwardInput;
-
     Animator animator;
     //check if Move
     private bool isMove;
@@ -35,7 +32,6 @@ public class Player : Character
     public Transform pointFire;
     public float timeStart;
     public float timeCountdownt;
-
     // show Circle around Player
     [HideInInspector] public DrawCircle drawCircle;
     public GameObject cirleObjectCanvas;
@@ -44,7 +40,7 @@ public class Player : Character
     [HideInInspector] public TextMeshProUGUI txtExp;
     [HideInInspector] public Transform canvasExpTrans;
     [HideInInspector] public bool isAddExp;
-    [HideInInspector] public GameObject expPrefabs;
+    public GameObject expPrefabs;
     [HideInInspector] public Vector3 offsetPosAddExp;
     //Animation Player
     public Animator playerAni;
@@ -69,7 +65,6 @@ public class Player : Character
     [HideInInspector] public bool isUlti;
     [HideInInspector] public bool isWin;
     //
-    //public StatePlayer ActiveState = StatePlayer.isIdle;
     //Check first attack each time idle
     [HideInInspector] public bool isFirstAttackEveryTimeIdle;
     //Effect
@@ -82,6 +77,21 @@ public class Player : Character
     //Play Game
     [HideInInspector] public bool play;
     [HideInInspector] public UiManager uiManager;
+    //Gold
+     public int gold;
+    [HideInInspector] public int indexArrow;
+    //index arrow to check if player have?
+    [HideInInspector] public List<int> indexArrowList;
+    //Position clothes
+    public Transform headTras;
+    public Transform beardTras;
+    public Transform underWearTras;
+    public Transform bladeWearTras;
+    public Transform shieldWearTras;
+    public GameObject materialGameObject;
+    [HideInInspector] public Material[] materialWears;
+    //
+    public GameObject arrowObject;
     private void Awake()
     {
         drawCircle = GetComponent<DrawCircle>();
@@ -90,7 +100,7 @@ public class Player : Character
         animator = GetComponent<Animator>();
         cameraPosOffset = new Vector3(15f, 15f, 0);
         offsetPosAddExp = new Vector3(0, 4, 0);
-        //cameraPos.position = transform.position + cameraPosOffset;
+        cameraPos.position = transform.position + cameraPosOffset;
         playerOldPos = transform.position;
         //attack
         rangeAttack = playerso.rangeAttack;
@@ -111,7 +121,6 @@ public class Player : Character
         // Set State
         SetState(StatePlayer.isIdle);
         //
-        //playerAni = GetComponent<Animator>();
         isAttack = false;
         isDance = false;
         isDead = false;
@@ -125,15 +134,25 @@ public class Player : Character
         isEffect = false;
         //Audio
         audioSource = GetComponent<AudioSource>();
-}
+        //
+        gold = playerso.gold;
+        //Set no arrow at start game
+        indexArrow = -1;
+        speed = 3;
+    }
     // Start is called before the first frame update
     void Start()
     {
         cameraPos.position = transform.position + cameraPosOffset;
         play = false;
         uiManager = GameObject.FindGameObjectWithTag("UiManager").GetComponent<UiManager>();
+        //get material
+        materialWears = materialGameObject.GetComponent<SkinnedMeshRenderer>().materials;
     }
-
+    private void FixedUpdate()
+    {
+        cameraPos.position = transform.position + cameraPosOffset;
+    }
     // Update is called once per frame
     void Update()
     {
@@ -142,28 +161,24 @@ public class Player : Character
         {
             if (!isDead)
             {
-
                 //Exp
                 txtExp.text = experience.ToString();
                 canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);//.Rotate(0, -90, 0,Space.World);
                 if (isAddExp)
                 {
                     isAddExp = false;
-                    //GameObject exp = (GameObject)Instantiate(expPrefabs, transform.position, expPrefabs.transform.rotation);
                     GameObject expAdd = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(expPrefabs);
                     expAdd.transform.position = transform.position + offsetPosAddExp;
-                    expAdd.GetComponent<AddExp>().t = Time.time;
                     expAdd.transform.rotation = expPrefabs.transform.rotation;
-                    //
                     expAdd.GetComponent<AddExp>().txtExp.text = "+ 2";
-                    //StartCoroutine("DelaySomeSencon");
-                    //expAdd.SetActive(false);
                 }
                 //Effect grow
                 if (isEffect)
                 {
                     isEffect = false;
-                    StartCoroutine("Effect");
+                    GameObject effectAdd = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(effectPrefabs);
+                    effectAdd.transform.position = transform.position;
+                    effectAdd.transform.rotation = expPrefabs.transform.rotation;
                 }
                 // Grow
                 Grow();
@@ -172,51 +187,23 @@ public class Player : Character
                 // Find Enemy array
                 enemys = GameObject.FindGameObjectsWithTag("Enemy");
                 // Move Player
-                if (Joystick.Direction == Vector2.zero)
+                if (Joystick.Direction == Vector2.zero || Input.GetMouseButtonUp(0))
                 {
                     // flag isMove
                     isMove = false;
-                    //Set state
-                    //if (!isAttack)
-                    //{
-                    //}
                     SetState(StatePlayer.isIdle);
-                    //animator.SetBool("isRun", false);
                     // Check Ranger Attack
-                    foreach (GameObject enemy in enemys)
-                    {
-                        if (enemy != null)
-                        {
-                            Vector3 dir = enemy.transform.position - transform.position;
-                            if (dir.magnitude < rangeAttack)
-                            {
-                                //animator.SetBool("isAttack", true);
-                                //return;
-                            }
-                            else
-                            {
-                                //animator.SetBool("isAttack", false);
-                            }
-
-                        }
-                    }
                 }
                 else
                 {
-                    //animator.SetBool("isRun", true);
                     // flag isMove
                     isMove = true;
-                    // Move if JoyStick change
                     MoveCharater();
-                    // ---------Set position Behind Player--- change caculator to slerp----
-                    cameraPos.position = transform.position + cameraPosOffset;
                     // Reset isFirstAttackEveryTimeIdle
                     isFirstAttackEveryTimeIdle = true;
                 }
                 //attack
                 FindNearestEnemy();
-                //Debug.Log("---");
-
                 // idle wil lock on EnemyNearest
                 if (!isMove)
                 {
@@ -232,13 +219,13 @@ public class Player : Character
                         isAttack = true;
                         isFirstAttackEveryTimeIdle = false;
                         SetState(StatePlayer.isAttack);
-                        // AttackCharater();
                         timeCountdownt = timeStart;
                     }
                 }
                 else
                 {
                     timeCountdownt -= Time.deltaTime;
+                    ShowArrow();
                 }
                 //Circle foot
                 if (NearestEnemyFromPlayerTrans != null)
@@ -263,8 +250,7 @@ public class Player : Character
         Quaternion lookRotation = Quaternion.LookRotation(directionMove);
         Vector3 rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * turnSpeed).eulerAngles;//Time.deltaTime * turnSpeed
         transform.rotation = Quaternion.Euler(0f, rotation.y, 0f);
-        agent.destination = transform.position + directionMove.normalized * Time.deltaTime * speed;
-        //set state
+        transform.Translate(directionMove.normalized * Time.deltaTime * speed, Space.World);
     }
     public void FindNearestEnemy()
     {
@@ -295,12 +281,9 @@ public class Player : Character
     {
         //Play Audio
         PlayAttackAudio();
-        //GameObject arrow2 = (GameObject) Instantiate(playerso.arrowPrefabs, pointFire.position, playerso.arrowPrefabs.transform.rotation);
         GameObject arrow2 = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(playerso.arrowPrefabs);
         arrow2.transform.position = pointFire.position;
         arrow2.transform.rotation = playerso.arrowPrefabs.transform.rotation;
-        //
-        //SetState(StatePlayer.isAttack);
         if(NearestEnemyFromPlayerTrans != null)
         {
             arrow2.GetComponent<Arrow2>().SetTaget(NearestEnemyFromPlayerTrans.position, rangeAttack, gameObject.GetInstanceID());
@@ -324,7 +307,14 @@ public class Player : Character
             arrow4.GetComponent<Arrow2>().SetTaget(target4Position, rangeAttack, gameObject.GetInstanceID());
             //
         }
-        //Destroy(arrow2, 3);
+    }
+    
+    public void ShowArrow()
+    {
+        if(arrowObject != null)
+        {
+            arrowObject.SetActive(true);
+        }
     }
     public void LockOntarget()
     {
@@ -431,20 +421,13 @@ public class Player : Character
         playerAni.SetBool("isWin", false);
     }
     //
-    IEnumerator Effect()
-    {
-        GameObject effect = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(effectPrefabs);
-        yield return new WaitForSeconds(0.2f);
-        effect.SetActive(false);
-    }
+    
     public void PlayAttackAudio()
     {
-        //audioSource.clip = attackAudio;
         audioSource.PlayOneShot(attackAudio);
     }
     public void PlayDieAudio()
     {
-        //audioSource.clip = attackAudio;
         audioSource.PlayOneShot(dieAudio);
     }
     //
@@ -455,18 +438,10 @@ public class Player : Character
     }
     public void DieLater()
     {
+        gameManager2.footTarget.gameObject.SetActive(false);
         gameObject.tag = "Untagged";
         isDead = true;
         SetState(StatePlayer.isDead);
         StartCoroutine("DelayDie");
     }
-#if UNITY_EDITOR
-
-    private void OnDrawGizmos()
-    {
-        //Gizmos.DrawWireSphere(transform.position, 4);
-        //Gizmos.DrawWireSphere(transform.position, 10);
-    }
-
-#endif
 }

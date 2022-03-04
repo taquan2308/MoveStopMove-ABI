@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-// named GameManager2 because do multi Project on One Project, other has GameManager
 public class GameManager2 : MonoBehaviour
 {
     [HideInInspector] public Transform NearestEnemyFromPlayerTrans;
@@ -30,8 +29,7 @@ public class GameManager2 : MonoBehaviour
     public Button btnRestart;
     //Point Center to check 4 coner
     public Transform pointCenterMapTrans;
-    // Start is called before the first frame update
-    //Play
+    public GameObject footTarget;
     [HideInInspector] public bool play;
     void Start()
     {
@@ -60,16 +58,13 @@ public class GameManager2 : MonoBehaviour
         //
         if(player == null)
         {
+            footTarget.SetActive(false);
             //GameOver
-            //canvasObj.SetActive(true);
-            //Time.timeScale = 0;
+            canvasObj.SetActive(true);
 
         }
-        //
         countEnemy = GameObject.FindGameObjectsWithTag("Enemy").Length;
         txtLive.text = "Alive: " + countEnemy.ToString();
-        //
-        //Debug.Log("indexPrefabsInArrSpawn     "+indexPrefabsInArrSpawn);
         GameObject[] enemyarrs = GameObject.FindGameObjectsWithTag("Enemy");
         // Check To Spaw
         if (enemyarrs.Length < 8 && isSpaw == true)
@@ -114,7 +109,6 @@ public class GameManager2 : MonoBehaviour
                     bootRight += 1;
                 }
             }
-            //Debug.Log(topLeft + "----" + topRight + "----" + bootRight + "----" + bootLeft);
             // find indextOfCornerHasLeastEnemy
             if (Mathf.Min(topLeft, topRight, bootLeft, bootRight) == topLeft)
             {

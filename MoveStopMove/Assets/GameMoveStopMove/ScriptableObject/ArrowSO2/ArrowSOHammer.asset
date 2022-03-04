@@ -10,9 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d3626d0aa22a6da4c97f2c3424d3b361, type: 3}
-  m_Name: ArrowSO2-Enemy
+  m_Name: ArrowSOHammer
   m_EditorClassIdentifier: 
-  arrowPrefabs: {fileID: 1380385053480028920, guid: 31228e7ac6f63d9458b21669fcde64f0, type: 3}
+  arrowPrefabs: {fileID: 4935308049860145269, guid: c5f8786fdf172334f839c3bf8a83f628, type: 3}
   speedArrow2: 10
   isRoteArrow: 0
   speedRote: 360
+  isThreeDirection: 0
+  iconArrow: {fileID: 21300000, guid: 22767e0cf323bb249954e3c9b4bfdb42, type: 3}
+  priceArrow: 50

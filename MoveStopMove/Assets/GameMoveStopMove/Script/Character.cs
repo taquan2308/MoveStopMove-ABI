@@ -6,6 +6,4 @@ public abstract class Character : MonoBehaviour
     public virtual void MoveCharater() { } //virtual method
     public virtual void IdleCharater() { } //virtual method
     public virtual void AttackCharater() { } //virtual method
-    // call
-    //public override void DoOtherStuff()
 }

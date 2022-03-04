@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 736df6ec62fe16f4aa4fb3f70a8b3f4c, type: 3}
   m_Name: EnemySO2 1
   m_EditorClassIdentifier: 
-  rangeAttack: 15
+  rangeAttack: 5
   arrowPrefabs: {fileID: 5624017937715774355, guid: 1197c96c72de40f4798a5f076a850dfb, type: 3}
   speedAttack: 1
   turnSpeed: 20
   experience: 0
+  timeIdleStart: 1

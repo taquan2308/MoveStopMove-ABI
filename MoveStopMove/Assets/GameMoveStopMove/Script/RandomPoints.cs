@@ -25,12 +25,6 @@ public class RandomPoints : MonoBehaviour
         minPosX = -10;
         minPosZ = -40;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
     public Vector3 GetPointRandomAroundThisObject()
     {
         Vector3 directionRandom = new Vector3(Random.Range(-1000, 1000), 0, Random.RandomRange(-1000, 1000)).normalized;

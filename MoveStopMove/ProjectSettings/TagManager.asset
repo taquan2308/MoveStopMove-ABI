@@ -8,6 +8,8 @@ TagManager:
   - Enemy
   - Cup
   - UiManager
+  - CanvasSkinShop
+  - arrow
   layers:
   - Default
   - TransparentFX

@@ -24,16 +24,15 @@ public class Enemy : Character
     //check if Move
     private bool isMove;
     //Attack
-    //enemy nearest in range attack
     [HideInInspector] public Transform NearestEnemyOtherFromThisEnemyTrans;
-    // enemy nearest Out range attack while no enemy in range attack
-    [HideInInspector] public Transform NearEnemyOutRangeAttackTrans;
     public float rangeAttack;
     public int experience;
     public EnemySO2 enemyso;
     public Transform pointFire;
-    public float timeStart;
-    public float timeCountdownt;
+    public float timeStartAttack;
+    public float timeCountdowntAttack;
+    public float timeStartIdle;
+    public float timeCountdowntIdle;
     
     // get radompoint
     [HideInInspector] RandomPoints randomPoints;
@@ -65,8 +64,6 @@ public class Enemy : Character
     [HideInInspector] public bool isRunAnim;
     [HideInInspector] public bool isUlti;
     [HideInInspector] public bool isWin;
-    //
-    //public StatePlayer ActiveState = StatePlayer.isIdle;
     //Check first attack each time idle
     [HideInInspector] public bool isFirstAttackEveryTimeIdle;
     //Effect
@@ -90,8 +87,10 @@ public class Enemy : Character
         //attack
         rangeAttack = enemyso.rangeAttack;
         //Countdownt attack
-        timeStart = enemyso.speedAttack;
-        timeCountdownt = 0;
+        timeStartAttack = enemyso.speedAttack;
+        timeCountdowntAttack = 0;
+        timeStartIdle = enemyso.timeIdleStart;
+        timeCountdowntIdle = 0;
         // initialization 
         isMove = false;
         //
@@ -126,74 +125,71 @@ public class Enemy : Character
         {
             if (!isDead)
             {
-                //
-                //SetState(StateEnemy.isDance);
                 //Grow
                 Grow();
                 //
                 if (isEffect)
                 {
                     isEffect = false;
-                    GameObject effect = (GameObject)Instantiate(effectPrefabs, transform.position, transform.rotation);
-                    Destroy(effect, 0.2f);
+                    GameObject effectAdd = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(effectPrefabs);
+                    effectAdd.transform.position = transform.position;
+                    effectAdd.transform.rotation = expPrefabs.transform.rotation;
                 }
                 //Exp
                 txtExp.text = experience.ToString();
-                canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);//.Rotate(0, -90, 0,Space.World);
+                canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);
                 if (isAddExp)
                 {
                     isAddExp = false;
-                    //GameObject exp = (GameObject)Instantiate(expPrefabs, transform.position, expPrefabs.transform.rotation);
-                    //
+                    isEffect = false;
                     GameObject expAdd = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(expPrefabs);
                     expAdd.transform.position = transform.position;
                     expAdd.transform.rotation = expPrefabs.transform.rotation;
-                    expAdd.GetComponent<AddExp>().t = Time.time;
-                    //
-                    //expAdd.GetComponent<AddExp>().txtExp.text = "'+ 2";
-                    //expAdd.SetActive(false);
                 }
-                FindNearestEnemy();
-                //Debug.Log("---");
-
-                // idle wil lock on EnemyNearest
-                //if (!isMove)
-                //{
-                //    LockOntarget();
-                //}
-                if (!agent.hasPath && !hasPointRandom)
+                
+                // Check Move
+                if (!isMove)
                 {
-                    isMove = false;
-                    SetState(StateEnemy.isIdle);
-                    LockOntarget();
-                    StartCoroutine("DelayFindRandomPointAndRun");
-                    //MoveToPointRandom();
-                }
-                else
-                {
-                    isMove = true;
-                    hasPointRandom = false;
-                    SetState(StateEnemy.isRun);
-                    // Reset isFirstAttackEveryTimeIdle
-                    isFirstAttackEveryTimeIdle = true;
-                }
-                //Ckeck ------ timecoundownt and have enemyNearest, isMove?
-
-                if (timeCountdownt <= 0 && NearestEnemyOtherFromThisEnemyTrans != null && isMove == false && isFirstAttackEveryTimeIdle)//&& isMove == false
-                {
-                    if ((transform.position - NearestEnemyOtherFromThisEnemyTrans.position).magnitude <= rangeAttack)
+                    FindNearestEnemy();
+                    if (timeCountdowntAttack <= 0 && NearestEnemyOtherFromThisEnemyTrans != null && isFirstAttackEveryTimeIdle)//&& isMove == false
                     {
-                        AttackCharater();
-                        //SetState(StateEnemy.isAttack);
-                        timeCountdownt = timeStart;
-                        // 
-                        isFirstAttackEveryTimeIdle = false;
+                        if ((transform.position - NearestEnemyOtherFromThisEnemyTrans.position).magnitude <= rangeAttack)
+                        {
+                            AttackCharater();
+                            timeCountdowntAttack = timeStartAttack;
+                            isFirstAttackEveryTimeIdle = false;
+                        }
+                    }
+                    else
+                    {
+                        timeCountdowntAttack -= Time.deltaTime;
+                        timeCountdowntAttack = Mathf.Clamp(timeCountdowntAttack, 0, Mathf.Infinity);
+                    }
+                    // check countdown idle
+                    if(timeCountdowntIdle <= 0)
+                    {
+                        isMove = true;
+                        AsignDestination();
+                        SetState(StateEnemy.isRun);
+                        // Reset isFirstAttackEveryTimeIdle
+                        isFirstAttackEveryTimeIdle = true;
+
+                    }
+                    else
+                    {
+                        timeCountdowntIdle -= Time.deltaTime;
                     }
                 }
                 else
                 {
-                    timeCountdownt -= Time.deltaTime;
-                    timeCountdownt = Mathf.Clamp(timeCountdownt, 0, Mathf.Infinity);
+                    // reset countdown idle
+                    timeCountdowntIdle = timeStartIdle;
+                }
+
+                if (!agent.hasPath)
+                {
+                    isMove = false;
+                    SetState(StateEnemy.isIdle);
                 }
             }
         }
@@ -204,7 +200,6 @@ public class Enemy : Character
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         GameObject[] enemiesAll = new GameObject[enemies.Length + 1];
-        //Debug.Log("enemies.Length    "+enemies.Length);
         for (int i = 0; i < enemies.Length; i++)
         {
             if(gameObject.GetInstanceID() != enemies[i].GetInstanceID())
@@ -215,11 +210,11 @@ public class Enemy : Character
         if(player != null)
         {
             enemiesAll[enemies.Length] = player;
-            //Debug.Log("Player here =======================");
         }
         
         float shortestDistance = Mathf.Infinity;
-        NearEnemyOutRangeAttackTrans = null;
+        NearestEnemyOtherFromThisEnemyTrans = null;
+
         //
         foreach (GameObject enemy in enemiesAll)
         {
@@ -238,20 +233,16 @@ public class Enemy : Character
     //
     public override void AttackCharater()
     {
+        LockOntarget();
         //Play Audio
         PlayAttackAudio();
-        //GameObject arrow2 = (GameObject)Instantiate(enemyso.arrowPrefabs, pointFire.position, enemyso.arrowPrefabs.transform.rotation);
-        //GameObject arrow2 = GetComponent<Spawn>().Spawns(enemyso.arrowPrefabs);
-        //SetState(StateEnemy.isAttack);
         GameObject arrow2 = GameObject.FindGameObjectWithTag("SpawArrow").GetComponent<SpawnArrow>().Spawns(enemyso.arrowPrefabs);
         arrow2.transform.position = pointFire.position;
         arrow2.transform.rotation = enemyso.arrowPrefabs.transform.rotation;
         arrow2.GetComponent<Arrow2>().SetTaget(NearestEnemyOtherFromThisEnemyTrans.position, rangeAttack, gameObject.GetInstanceID());
-        //Destroy(arrow2, 2);
     }
     public void LockOntarget()
     {
-        //Debug.Log(NearestEnemyOtherFromThisEnemyTrans.name);
         // check if have enemyNearest
         if (NearestEnemyOtherFromThisEnemyTrans != null)
         {
@@ -261,11 +252,6 @@ public class Enemy : Character
             transform.rotation = Quaternion.Euler(0f, rotation.y, 0f);
         }
     }
-    //public void MoveToPointRandom()
-    //{
-    //    StartCoroutine("DelayAndRun");// error Must place StartCoroutine in Update
-    //}
-    //
     public void Grow()
     {
         if (experience > 2)
@@ -273,55 +259,23 @@ public class Enemy : Character
             transform.localScale = new Vector3(1 + experience / 2 * 0.1f, 1 + experience / 2 * 0.1f, 1 + experience / 2 * 0.1f);// buff 10% Scale
         }
     }
-    // coroutine delay
-    IEnumerator DelayFindRandomPointAndRun()
+    //
+    public void AsignDestination()
     {
-        yield return new WaitForSeconds(1);
         //check if in range no Enemmy
-        if (NearEnemyOutRangeAttackTrans != null)//!isMove && 
+        if (NearestEnemyOtherFromThisEnemyTrans != null)//!isMove && 
         {
-            //Debug.Log(NearestEnemyOtherFromThisEnemyTrans.GetComponent<RandomPoints>().pointRandomAroundThisObject);
-            //
-            if (!hasPointRandom)
-            {
-                pointToGo = NearEnemyOutRangeAttackTrans.GetComponent<RandomPoints>().GetPointRandomAroundThisObject();
-                hasPointRandom = true;
-            }
+            pointToGo = NearestEnemyOtherFromThisEnemyTrans.GetComponent<RandomPoints>().GetPointRandomAroundThisObject();
             //
             directionMove = pointToGo - transform.position;
             Quaternion lookRotation = Quaternion.LookRotation(directionMove);
             Vector3 rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * turnSpeed).eulerAngles;//Time.deltaTime * turnSpeed
 
             transform.rotation = Quaternion.Euler(0f, rotation.y, 0f);
-            //
-            //SetState(StateEnemy.isRun);
-            //Draw point wil go
             Debug.DrawRay(pointToGo, Vector3.up, Color.black, 2);
-            agent.destination = pointToGo;
-        }
-        //check if in range has Enemmy
-        if (NearestEnemyOtherFromThisEnemyTrans != null)//!isMove && 
-        {
-            //Debug.Log(NearestEnemyOtherFromThisEnemyTrans.GetComponent<RandomPoints>().pointRandomAroundThisObject);
-            //
-            if (!hasPointRandom)
-            {
-                pointToGo = NearestEnemyOtherFromThisEnemyTrans.GetComponent<RandomPoints>().GetPointRandomAroundThisObject();
-                hasPointRandom = true;
-            }
-            //
-            //Draw point wil go
-            Debug.DrawRay(pointToGo, Vector3.up, Color.black, 2);
-            directionMove = pointToGo - transform.position;
-            Quaternion lookRotation = Quaternion.LookRotation(directionMove);
-            Vector3 rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * turnSpeed).eulerAngles;//Time.deltaTime * turnSpeed
-            //Debug.Log(rotation);
-            transform.rotation = Quaternion.Euler(0f, rotation.y, 0f);
-            //
             agent.destination = pointToGo;
         }
     }
-    // Set State Player Function
     public void SetState(StateEnemy _statePlayer)
     {
         if (_statePlayer == StateEnemy.isAttack)
@@ -432,15 +386,4 @@ public class Enemy : Character
         SetState(StateEnemy.isDead);
         StartCoroutine("DelayDie");
     }
-    //DrawWireSphere
-#if UNITY_EDITOR
-
-    private void OnDrawGizmos()
-    {
-        //Gizmos.DrawWireSphere(transform.position, 4);
-        //Gizmos.DrawWireSphere(transform.position, 10);
-        //Gizmos.DrawWireSphere(transform.position, rangeAttack);
-    }
-
-#endif
 }
