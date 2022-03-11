@@ -4,91 +4,63 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class CanvasSkinShop : MonoBehaviour
+public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
 {
-    //UI
-    [HideInInspector] public UiManager uiManager;
     //Button
-    public Button exitBtn;
-    public Button hornBtn;
-    public Button shortBtn;
-    public Button armBtn;
-    public Button skinBtn;
+    [SerializeField] private Button exitBtn;
+    [SerializeField] private Button hornBtn;
+    [SerializeField] private Button shortBtn;
+    [SerializeField] private Button armBtn;
+    [SerializeField] private Button skinBtn;
     //
-    public HornSO[] arrayHornSO;
-    public Transform content;
-    public GameObject itemOfContentPrefab;
-    public Button purchaseBtn;
-    public Button adsBtn;
+    [SerializeField] private HornSO[] arrayHornSO;
+    [SerializeField] private Transform content;
+    [SerializeField] private GameObject itemOfContentPrefab;
+    [SerializeField] private Button purchaseBtn;
+    [SerializeField] private Button adsBtn;
     //Price
-    public TextMeshProUGUI priceTxt;
-    public Image goldImage;
-    public TextMeshProUGUI adsCountTxt;
-    [HideInInspector] public bool isSeenAds;
+    [SerializeField] private TextMeshProUGUI priceTxt;
+    [SerializeField] private Image goldImage;
+    [SerializeField] private TextMeshProUGUI adsCountTxt;
+    private bool isSeenAds;
     //
-    public TextMeshProUGUI equipedTxt;
-    public TextMeshProUGUI selectTxt;
-    public GameObject lockImage;
-    public bool isAdsClick;
+    [SerializeField] private TextMeshProUGUI equipedTxt;
+    [SerializeField] private TextMeshProUGUI selectTxt;
+    [SerializeField] private GameObject lockImage;
+    private bool isAdsClick;
     //UI
-    [HideInInspector] public Player player;
+    [HideInInspector] public PlayerMain playerMain;
     // Load weapon to UI
-    public List<int> indexEquipedList;
-    [HideInInspector] public int indexHorn;
+    private List<int> indexEquipedList;
+    private int indexHorn;
     [HideInInspector] public int indexEquiped;
     [HideInInspector] public int priceHorn;
     [HideInInspector] public HornSO hornScriptableObjectChosen;
     // State Purcchase button
-    public enum StateEquipment { onlyPurchase, equiped, notYet }
-    public StateEquipment[] stateIndext;
+    private enum StateEquipment { onlyPurchase, equiped, notYet }
+    private StateEquipment[] stateIndext;
     //Color Button
-    public Color choseColor;
-    public Color normalColor;
-    public Button[] arrButtonGroup;
-    public List<Button> listBtnItem;
+    private Color choseColor;
+    private Color normalColor;
+    private Button[] arrButtonGroup;
+    private List<Button> listBtnItem;
+    //
+    public List<Button> ListBtnItem { get => listBtnItem; set => listBtnItem = value; }
+    public int IndexHorn { get => indexHorn; set => indexHorn = value; }
+    public GameObject LockImage { get => lockImage; set => lockImage = value; }
+    void OnEnable()
+    {
+        InitializeVariables();
+        Horn();
+    }
     private void Awake()
     {
-        stateIndext = new StateEquipment[arrayHornSO.Length];
-        for (int i = 0; i < arrayHornSO.Length; i++)
-        {
-            stateIndext[i] = StateEquipment.notYet;
-        }
-        listBtnItem = new List<Button>();
-        choseColor = new Color(1f, 1f, 1f);
-        normalColor = new Color(0.8f, 0.8f, 0.8f);
+        
     }
     // Start is called before the first frame update
     void Start()
     {
-        uiManager = GameObject.FindGameObjectWithTag("UiManager").GetComponent<UiManager>();
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        exitBtn.onClick.AddListener(Exit);
-        hornBtn.onClick.AddListener(Horn);
-        shortBtn.onClick.AddListener(Short);
-        armBtn.onClick.AddListener(Arm);
-        skinBtn.onClick.AddListener(Skin);
-        purchaseBtn.onClick.AddListener(Purchase);
-        adsBtn.onClick.AddListener(AdsCount);
-        //
-        stateIndext = new StateEquipment[arrayHornSO.Length];
-        isAdsClick = false;
-        //
-        hornScriptableObjectChosen = arrayHornSO[0];
-        //
-        priceHorn = arrayHornSO[0].priceHorn;
-        priceTxt.text = arrayHornSO[0].priceHorn.ToString();
-        //
-        isSeenAds = false;
-        //Nemed Indext
-        stateIndext = new StateEquipment[arrayHornSO.Length];
-        for (int i = 0; i < arrayHornSO.Length; i++)
-        {
-            stateIndext[i] = StateEquipment.notYet;
-        }
-        //
-        arrButtonGroup = new Button[] { hornBtn,shortBtn,armBtn,skinBtn};
-        choseColor = new Color(1f, 1f, 1f);
-        normalColor = new Color(0.8f, 0.8f, 0.8f);
+        
     }
 
     // Update is called once per frame
@@ -96,16 +68,12 @@ public class CanvasSkinShop : MonoBehaviour
     {
         
     }
-    private void OnEnable()
-    {
-        Horn();
-    }
     public void Exit()
     {
-        uiManager.canvasCenterBoot.SetActive(true);
+        UiManager.Instance.CanvasCenterBoot.SetActive(true);
         gameObject.SetActive(false);
-        uiManager.mainCamera.SetActive(true);
-        uiManager.subCamera01.SetActive(false);
+        CameraManager.Instance.MainCameraTrans.gameObject.SetActive(true);
+        CameraManager.Instance.Sub01CameraTrans.gameObject.SetActive(false);
     }
     public void SetColorBtn(Button _nameBtn)
     {
@@ -166,15 +134,15 @@ public class CanvasSkinShop : MonoBehaviour
             
             GameObject item = Instantiate(itemOfContentPrefab, content, false);
             item.GetComponent<Image>().sprite = arrayHornSO[i].iconHorn;
-            item.GetComponent<Item>().hornSOThisItem = arrayHornSO[i];
-            item.GetComponent<Item>().indexHorn = i;
+            item.GetComponent<Item>().HornSOThisItem = arrayHornSO[i];
+            item.GetComponent<Item>().IndexHorn = i;
             //check state because order process start and OnEnable,
             //unlock
             if (stateIndext.Length > 0)
             {
                 if (stateIndext[i] == StateEquipment.equiped || stateIndext[i] == StateEquipment.onlyPurchase)
                 {
-                    item.GetComponent<Item>().lockImage.SetActive(false);
+                    item.GetComponent<Item>().LockImage.SetActive(false);
                 }
             }
             
@@ -233,7 +201,7 @@ public class CanvasSkinShop : MonoBehaviour
     }
     public void Purchase()
     {
-        if (player.gold >= hornScriptableObjectChosen.priceHorn)
+        if (playerMain.Gold >= hornScriptableObjectChosen.priceHorn)
         {
             DestroySpawnEqip();
             lockImage.SetActive(false);
@@ -253,113 +221,113 @@ public class CanvasSkinShop : MonoBehaviour
         //Horn
         if(hornScriptableObjectChosen.nameGroup == "Horn")
         {
-            if (player.headTras.childCount > 0)
+            if (playerMain.HeadTras.childCount > 0)
             {
-                Transform[] items = player.headTras.gameObject.GetComponentsInChildren<Transform>();
+                Transform[] items = playerMain.HeadTras.gameObject.GetComponentsInChildren<Transform>();
                 //Ignor first component of Content
                 for (int i = 1; i < items.Length; i++)
                 {
                     Destroy(items[i].gameObject);
                 }
             }
-            GameObject item = Instantiate(hornScriptableObjectChosen.prefabsHorn, player.headTras, false);
+            GameObject item = Instantiate(hornScriptableObjectChosen.prefabsHorn, playerMain.HeadTras, false);
             if (stateIndext[indexHorn] == StateEquipment.notYet && !isAdsClick)
             {
-                player.gold -= hornScriptableObjectChosen.priceHorn;
+                playerMain.Gold -= hornScriptableObjectChosen.priceHorn;
             }
         }
         //Short
         if(hornScriptableObjectChosen.nameGroup == "Short")
         {
             //set material
-            var mats = new Material[player.materialWears.Length];
+            var mats = new Material[playerMain.MaterialWears.Length];
             for (int i = 0; i < mats.Length; i++)
             {
-                mats[i] = player.materialWears[i];
+                mats[i] = playerMain.MaterialWears[i];
             }
             mats[0] = hornScriptableObjectChosen.materialPan;
             //Must call player.materialGameObject.GetComponent<SkinnedMeshRenderer>().materials = mats, ( do not change if set : player.materialWears = mats;)
-            player.materialGameObject.GetComponent<SkinnedMeshRenderer>().materials = mats;
+            playerMain.MaterialGameObject.GetComponent<SkinnedMeshRenderer>().materials = mats;
             //
             if (stateIndext[indexHorn] == StateEquipment.notYet && !isAdsClick)
             {
-                player.gold -= hornScriptableObjectChosen.priceHorn;
+                playerMain.Gold -= hornScriptableObjectChosen.priceHorn;
             }
         }
         //Arm
         if(hornScriptableObjectChosen.nameGroup == "Arm")
         {
-            if (player.headTras.childCount > 0)
+            if (playerMain.HeadTras.childCount > 0)
             {
-                Transform[] items = player.shieldWearTras.gameObject.GetComponentsInChildren<Transform>();
+                Transform[] items = playerMain.ShieldWearTras.gameObject.GetComponentsInChildren<Transform>();
                 //Ignor first component of Content
                 for (int i = 1; i < items.Length; i++)
                 {
                     Destroy(items[i].gameObject);
                 }
             }
-            GameObject item = Instantiate(hornScriptableObjectChosen.prefabsShield, player.shieldWearTras, false);
+            GameObject item = Instantiate(hornScriptableObjectChosen.prefabsShield, playerMain.ShieldWearTras, false);
             if (stateIndext[indexHorn] == StateEquipment.notYet && !isAdsClick)
             {
-                player.gold -= hornScriptableObjectChosen.priceHorn;
+                playerMain.Gold -= hornScriptableObjectChosen.priceHorn;
             }
         }
         //Skin
         if(hornScriptableObjectChosen.nameGroup == "Skin")
         {
-            var mats = new Material[player.materialWears.Length];
+            var mats = new Material[playerMain.MaterialWears.Length];
             for (int i = 0; i < mats.Length; i++)
             {
-                mats[i] = player.materialWears[i];
+                mats[i] = playerMain.MaterialWears[i];
             }
             mats[0] = hornScriptableObjectChosen.materialFullSet;
             //Must call player.materialGameObject.GetComponent<SkinnedMeshRenderer>().materials = mats, ( do not change if set : player.materialWears = mats;)
-            player.materialGameObject.GetComponent<SkinnedMeshRenderer>().materials = mats;
+            playerMain.MaterialGameObject.GetComponent<SkinnedMeshRenderer>().materials = mats;
             if(hornScriptableObjectChosen.prefabsWing != null)
             {
                 if(hornScriptableObjectChosen.prefabsWing.name == "Blade")
                 {
-                    if (player.bladeWearTras.childCount > 0)
+                    if (playerMain.BladeWearTras.childCount > 0)
                     {
-                        Transform[] items = player.shieldWearTras.gameObject.GetComponentsInChildren<Transform>();
+                        Transform[] items = playerMain.ShieldWearTras.gameObject.GetComponentsInChildren<Transform>();
                         //Ignor first component of Content
                         for (int i = 1; i < items.Length; i++)
                         {
                             Destroy(items[i].gameObject);
                         }
                     }
-                    GameObject item = Instantiate(hornScriptableObjectChosen.prefabsWing, player.bladeWearTras, false);
+                    GameObject item = Instantiate(hornScriptableObjectChosen.prefabsWing, playerMain.BladeWearTras, false);
                 }
             }
             if (hornScriptableObjectChosen.prefabsHorn != null)
             {
                 if (hornScriptableObjectChosen.prefabsHorn.name == "Hat_Thor")
                 {
-                    if (player.bladeWearTras.childCount > 0)
+                    if (playerMain.BladeWearTras.childCount > 0)
                     {
-                        Transform[] items = player.bladeWearTras.gameObject.GetComponentsInChildren<Transform>();
+                        Transform[] items = playerMain.BladeWearTras.gameObject.GetComponentsInChildren<Transform>();
                         //Ignor first component of Content
                         for (int i = 1; i < items.Length; i++)
                         {
                             Destroy(items[i].gameObject);
                         }
                     }
-                    if (player.headTras.childCount > 0)
+                    if (playerMain.HeadTras.childCount > 0)
                     {
-                        Transform[] items = player.headTras.gameObject.GetComponentsInChildren<Transform>();
+                        Transform[] items = playerMain.HeadTras.gameObject.GetComponentsInChildren<Transform>();
                         //Ignor first component of Content
                         for (int i = 1; i < items.Length; i++)
                         {
                             Destroy(items[i].gameObject);
                         }
                     }
-                    GameObject item = Instantiate(hornScriptableObjectChosen.prefabsHorn, player.headTras, false);
+                    GameObject item = Instantiate(hornScriptableObjectChosen.prefabsHorn, playerMain.HeadTras, false);
                 }
             }
             //
             if (stateIndext[indexHorn] == StateEquipment.notYet && !isAdsClick)
             {
-                player.gold -= hornScriptableObjectChosen.priceHorn;
+                playerMain.Gold -= hornScriptableObjectChosen.priceHorn;
             }
         }
     }
@@ -395,5 +363,36 @@ public class CanvasSkinShop : MonoBehaviour
         goldImage.gameObject.SetActive(false);
         equipedTxt.gameObject.SetActive(false);
         selectTxt.gameObject.SetActive(true);
+    }
+
+    public void InitializeVariables()
+    {
+        stateIndext = new StateEquipment[arrayHornSO.Length];
+        for (int i = 0; i < arrayHornSO.Length; i++)
+        {
+            stateIndext[i] = StateEquipment.notYet;
+        }
+        listBtnItem = new List<Button>();
+        choseColor = new Color(1f, 1f, 1f);
+        normalColor = new Color(0.8f, 0.8f, 0.8f);
+        //
+        playerMain = PlayerMain.Instance;
+        exitBtn.onClick.AddListener(Exit);
+        hornBtn.onClick.AddListener(Horn);
+        shortBtn.onClick.AddListener(Short);
+        armBtn.onClick.AddListener(Arm);
+        skinBtn.onClick.AddListener(Skin);
+        purchaseBtn.onClick.AddListener(Purchase);
+        adsBtn.onClick.AddListener(AdsCount);
+        //
+        isAdsClick = false;
+        //
+        hornScriptableObjectChosen = arrayHornSO[0];
+        //
+        priceHorn = arrayHornSO[0].priceHorn;
+        priceTxt.text = arrayHornSO[0].priceHorn.ToString();
+        //
+        isSeenAds = false;
+        arrButtonGroup = new Button[] { hornBtn, shortBtn, armBtn, skinBtn };
     }
 }

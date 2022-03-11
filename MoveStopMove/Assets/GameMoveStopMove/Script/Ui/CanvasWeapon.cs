@@ -4,72 +4,56 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class CanvasWeapon : MonoBehaviour
+public class CanvasWeapon : MonoBehaviour, IInitializeVariables
 {
     //Button
-    public Button exitBtn;
-    public Button beforeBtn;
-    public Button nextBtn;
-    public Button purchaseBtn;
-    public Button adsBtn;
-    public Image iconArrow;
+    [SerializeField] private Button exitBtn;
+    [SerializeField] private Button beforeBtn;
+    [SerializeField] private Button nextBtn;
+    [SerializeField] private Button purchaseBtn;
+    [SerializeField] private Button adsBtn;
+    [SerializeField] private Image iconArrow;
     //Price
-    public TextMeshProUGUI lockTxt;
-    public TextMeshProUGUI priceTxt;
-    public Image goldImage;
-    public TextMeshProUGUI adsCountTxt;
-    [HideInInspector] public bool isSeenAds;
+    [SerializeField] private TextMeshProUGUI lockTxt;
+    [SerializeField] private TextMeshProUGUI priceTxt;
+    [SerializeField] private Image goldImage;
+    [SerializeField] private TextMeshProUGUI adsCountTxt;
+    private bool isSeenAds;
     //
-    public TextMeshProUGUI equipedTxt;
-    public TextMeshProUGUI selectTxt;
-    public bool isAdsClick;
+    [SerializeField] private TextMeshProUGUI equipedTxt;
+    [SerializeField] private TextMeshProUGUI selectTxt;
+    private bool isAdsClick;
     //UI
-    [HideInInspector] public UiManager uiManager;
-    [HideInInspector] public Player player;
-    [HideInInspector] public Vector3 offsetArrow;
+    private PlayerMain playerMain;
+    private Vector3 offsetArrow;
     // Load weapon to UI
-    public ArrowSO2[] arrowList;
-    public List <int> indexEquipedList;
-    [HideInInspector] public int indexArrow;
-    [HideInInspector] public int indexEquiped;
-    [HideInInspector] public int priceArrow;
-    [HideInInspector] public ArrowSO2 ArrowScriptableObjectChosen;
+    [SerializeField] private ArrowSO[] arrowList;
+    private List <int> indexEquipedList;
+    private int indexArrow;
+    private int indexEquiped;
+    private int priceArrow;
+    private ArrowSO arrowScriptableObjectChosen;
     // State Purcchase button
     public enum StateEquipment { onlyPurchase, equiped, notYet}
     public StateEquipment[] stateIndext;
+    public Vector3 OffsetArrow { get => offsetArrow; set => offsetArrow = value; }
+    // Load weapon to UI
+    public ArrowSO[] ArrowList { get => arrowList; set => arrowList = value; }
+    public List<int> IndexEquipedList { get => indexEquipedList; set => indexEquipedList = value; }
+    public int IndexArrow { get => indexArrow; set => indexArrow = value; }
+    public int IndexEquiped { get => indexEquiped; set => indexEquiped = value; }
+    public int PriceArrow { get => priceArrow; set => priceArrow = value; }
+    public ArrowSO ArrowScriptableObjectChosen { get => arrowScriptableObjectChosen; set => arrowScriptableObjectChosen = value; }
+    public StateEquipment[] StateIndext { get => stateIndext; set => stateIndext = value; }
     // Start is called before the first frame update
     void Start()
     {
-        indexArrow = 0;
-        uiManager = GameObject.FindGameObjectWithTag("UiManager").GetComponent<UiManager>();
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        exitBtn.onClick.AddListener(Exit);
-        beforeBtn.onClick.AddListener(Before);
-        nextBtn.onClick.AddListener(Next);
-        purchaseBtn.onClick.AddListener(Purchase);
-        adsBtn.onClick.AddListener(AdsCount);
-        ArrowScriptableObjectChosen = arrowList[0];
-        // offset position weapon
-        offsetArrow = new Vector3(-0.23f, 0, 0);
-        //
-        priceArrow = arrowList[0].priceArrow;
-        priceTxt.text = arrowList[0].priceArrow.ToString();
-        iconArrow.sprite = arrowList[0].iconArrow;
-        //
-        isSeenAds = false;
-        //Nemed Indext
-        stateIndext = new StateEquipment[arrowList.Length];
-        for (int i = 0; i < arrowList.Length; i++)
-        {
-            stateIndext[i] = StateEquipment.notYet;
-        }
-        //
-        isAdsClick = false;
+        
     }
     public void Exit()
     {
         gameObject.SetActive(false);
-        uiManager.canvasCenterBoot.SetActive(true);
+        UiManager.Instance.CanvasCenterBoot.SetActive(true);
     }
     public void Before()
     {
@@ -130,21 +114,22 @@ public class CanvasWeapon : MonoBehaviour
     }
     public void SpawnSetInforArrow()
     {
-        GameObject arrow = (GameObject)Instantiate(ArrowScriptableObjectChosen.arrowPrefabs, player.pointFire.position, player.pointFire.rotation);
-        arrow.GetComponent<Arrow2>().enabled = false;
+        GameObject arrow = (GameObject)Instantiate(ArrowScriptableObjectChosen.arrowPrefabs, playerMain.PointFire.position, playerMain.PointFire.rotation);
+        playerMain.ArrowObject = arrow;
+        arrow.GetComponent<Arrow>().enabled = false;
         arrow.GetComponent<RoteItself>().enabled = false;
-        arrow.transform.SetParent(player.pointFire);
+        arrow.transform.SetParent(playerMain.PointFire);
         arrow.transform.localPosition += offsetArrow;
         arrow.transform.transform.Rotate(0, -90, 0, Space.Self);
         if(stateIndext[indexArrow] == StateEquipment.notYet && !isAdsClick)
         {
-            player.gold -= ArrowScriptableObjectChosen.priceArrow;
+            playerMain.Gold -= ArrowScriptableObjectChosen.priceArrow;
         }
-        player.playerso.arrowPrefabs = ArrowScriptableObjectChosen.arrowPrefabs;
+        playerMain.Playerso.arrowPrefabs = ArrowScriptableObjectChosen.arrowPrefabs;
     }
     public void Purchase()
     {
-        if (player.gold >= ArrowScriptableObjectChosen.priceArrow)
+        if (playerMain.Gold >= ArrowScriptableObjectChosen.priceArrow)
         {
             DestroySpawnEqip();
         }
@@ -171,14 +156,40 @@ public class CanvasWeapon : MonoBehaviour
     }
     public void DestroySpawnEqip()
     {
-        if (player.pointFire.childCount > 0)
+        if (playerMain.PointFire.childCount > 0)
         {
-            Destroy(player.pointFire.GetChild(0).gameObject);
+            Destroy(playerMain.PointFire.GetChild(0).gameObject);
         }
         ArrowScriptableObjectChosen = arrowList[indexArrow];
         SpawnSetInforArrow();
         stateIndext[indexArrow] = StateEquipment.equiped;
         DeEquiped();
         SetEquipedVisible();
+    }
+    private void OnEnable()
+    {
+        InitializeVariables();
+    }
+    public void InitializeVariables()
+    {
+        playerMain = PlayerMain.Instance;
+        indexArrow = 0;
+        exitBtn.onClick.AddListener(Exit);
+        beforeBtn.onClick.AddListener(Before);
+        nextBtn.onClick.AddListener(Next);
+        purchaseBtn.onClick.AddListener(Purchase);
+        adsBtn.onClick.AddListener(AdsCount);
+        ArrowScriptableObjectChosen = arrowList[0];
+        offsetArrow = new Vector3(-0.23f, 0, 0);
+        priceArrow = arrowList[0].priceArrow;
+        priceTxt.text = arrowList[0].priceArrow.ToString();
+        iconArrow.sprite = arrowList[0].iconArrow;
+        isSeenAds = false;
+        stateIndext = new StateEquipment[arrowList.Length];
+        for (int i = 0; i < arrowList.Length; i++)
+        {
+            stateIndext[i] = StateEquipment.notYet;
+        }
+        isAdsClick = false;
     }
 }

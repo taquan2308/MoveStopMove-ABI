@@ -4,5 +4,14 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/GameMoveStopMove/Scene/MoveStopMoveLv1.unity
+    guid: 949e728a604f04e428ab67361ca27a3f
+  - enabled: 1
+    path: Assets/GameMoveStopMove/Scene/MoveStopMoveLv2.unity
+    guid: 919e6614fc904b54aafa69236bde7a0a
+  - enabled: 1
+    path: Assets/GameMoveStopMove/Scene/MoveStopMoveLv3.unity
+    guid: a23744269629e6849a122f8d07a3d58d
   m_configObjects: {}

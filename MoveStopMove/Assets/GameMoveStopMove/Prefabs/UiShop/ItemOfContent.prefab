@@ -135,14 +135,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 354a7cc3f84405c4ba0b6e284f60daa3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  button: {fileID: 0}
-  hornSOThisItem: {fileID: 0}
-  canvasSkinShop: {fileID: 0}
-  player: {fileID: 0}
-  indexHorn: 0
+  button: {fileID: 181705064626742839}
   lockImage: {fileID: 9189992391525396401}
-  choseColor: {r: 0, g: 0, b: 0, a: 0}
-  normalColor: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &9189992391525396401
 GameObject:
   m_ObjectHideFlags: 0

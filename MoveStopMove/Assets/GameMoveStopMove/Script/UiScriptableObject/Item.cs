@@ -3,30 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Item : MonoBehaviour
+public class Item : MonoBehaviour, IInitializeVariables
 {
-    public Button button;
-    public HornSO hornSOThisItem;
-    [HideInInspector] public CanvasSkinShop canvasSkinShop;
-    [HideInInspector] public Player player;
-    [HideInInspector] public int indexHorn;
-    public GameObject lockImage;
-    //
-    public Color choseColor;
-    public Color normalColor;
+    [SerializeField] private Button button;
+    [SerializeField] private GameObject lockImage;
+    private Color choseColor;
+    private Color normalColor;
+    private PlayerMain playerMain;
+    private HornSO hornSOThisItem;
+    private CanvasSkinShop canvasSkinShop;
+    private int indexHorn;
+    public HornSO HornSOThisItem { get => hornSOThisItem; set => hornSOThisItem = value; }
+    public CanvasSkinShop CanvasSkinShop { get => canvasSkinShop; set => canvasSkinShop = value; }
+    public int IndexHorn { get => indexHorn; set => indexHorn = value; }
+    public GameObject LockImage { get => lockImage; set => lockImage = value; }
     private void Awake()
     {
-        choseColor = new Color(1f, 1f, 1f);
-        normalColor = new Color(0.8f, 0.8f, 0.8f);
+        
     }
     // Start is called before the first frame update
     void Start()
     {
-        button = GetComponent<Button>();
-        button.onClick.AddListener(ClickBtn);
-        canvasSkinShop = GameObject.FindGameObjectWithTag("CanvasSkinShop").GetComponent<CanvasSkinShop>();
-        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
-        lockImage = gameObject.transform.GetChild(0).gameObject;
+        
     }
 
     // Update is called once per frame
@@ -37,7 +35,7 @@ public class Item : MonoBehaviour
     public void ClickBtn()
     {
         canvasSkinShop = GameObject.FindGameObjectWithTag("CanvasSkinShop").GetComponent<CanvasSkinShop>();
-        foreach (Button btn in canvasSkinShop.listBtnItem)
+        foreach (Button btn in canvasSkinShop.ListBtnItem)
         {
             if (btn != null)
             {
@@ -57,8 +55,18 @@ public class Item : MonoBehaviour
         }
         canvasSkinShop.SetPriceTxt(hornSOThisItem.priceHorn);
         canvasSkinShop.hornScriptableObjectChosen = hornSOThisItem;
-        canvasSkinShop.indexHorn = indexHorn;
+        canvasSkinShop.IndexHorn = indexHorn;
         canvasSkinShop.CheckStateShowUi();
-        canvasSkinShop.lockImage = lockImage;
+        canvasSkinShop.LockImage = lockImage;
+    }
+
+    public void InitializeVariables()
+    {
+        choseColor = new Color(1f, 1f, 1f);
+        normalColor = new Color(0.8f, 0.8f, 0.8f);
+        button.onClick.AddListener(ClickBtn);
+        canvasSkinShop = UiManager.Instance.CanvasSkinShop.GetComponent<CanvasSkinShop>();
+        playerMain = PlayerMain.Instance;
+        lockImage = transform.GetChild(0).gameObject;
     }
 }
