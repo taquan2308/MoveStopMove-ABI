@@ -16,6 +16,7 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
     private int bootRight;
     //
     private bool isSpawn;
+    private PlayerMain playerMain;
     //Point Center to check 4 coner
     [SerializeField] private Transform pointCenterMapTrans;
     protected override void Awake()
@@ -29,13 +30,14 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
     // Start is called before the first frame update
     void Start()
     {
+        if (playerMain == null)
+        {
+            playerMain = PlayerMain.Instance;
+        }
         InvokeRepeating("Check", 0, 1.5f);
     }
     // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    
     public void Check()
     {
         // Check To Spaw
@@ -71,19 +73,50 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
                 if (enemy.transform.position.z < pointCenterMapTrans.position.z && enemy.transform.position.x < pointCenterMapTrans.position.x)
                 {
                     topLeft += 1;
+                    if (playerMain != null)
+                    {
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[0].position) <= 4)
+                        {
+                            topLeft += 1000;
+                        }
+                    }
                 }
                 else if (enemy.transform.position.z > pointCenterMapTrans.position.z && enemy.transform.position.x < pointCenterMapTrans.position.x)
                 {
                     topRight += 1;
+                    if (playerMain != null)
+                    {
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[1].position) <= 4)
+                        {
+                            topRight += 1000;
+                        }
+                    }
                 }
                 else if (enemy.transform.position.z > pointCenterMapTrans.position.z && enemy.transform.position.x > pointCenterMapTrans.position.x)
                 {
                     bootRight += 1;
+                    if (playerMain != null)
+                    {
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[2].position) <= 4)
+                        {
+                            bootRight += 1000;
+                        }
+                    }
                 }
                 else if (enemy.transform.position.z < pointCenterMapTrans.position.z && enemy.transform.position.x > pointCenterMapTrans.position.x)
                 {
-                    bootRight += 1;
+                    bootLeft += 1;
+                    //Debug.Log(playerMain);
+                    if (playerMain != null)
+                    {
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[3].position) <= 4)
+                        {
+                            bootLeft += 1000;
+                        }
+                        //Debug.Log(topLeft + "   " + topRight + "   " + bootRight + "   " + bootLeft);
+                    }
                 }
+                
             }
         }
         // find indextOfCornerHasLeastEnemy

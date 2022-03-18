@@ -37,7 +37,6 @@ public class PlayerMain : Character, IInitializeVariables
     private float timeStart;
     private float timeCountdownt;
     // show Circle around Player
-    [HideInInspector] public DrawCircle drawCircle;
     private GameObject footTarget;
     //Exp Canvas
     private TextMeshProUGUI txtExp;
@@ -71,7 +70,8 @@ public class PlayerMain : Character, IInitializeVariables
     [SerializeField] private Material[] materialWears;
     //
     [SerializeField] private GameObject arrowObject;
-
+    [SerializeField] private RectTransform rectCircle;
+    [SerializeField] private Transform playerSubTransform;
     public int Gold { get => gold; set => gold = value;}
     public bool IsPlay { get => isPlay; set => isPlay = value;}
     public Transform HeadTras { get => headTras; set => headTras = value; }
@@ -90,6 +90,8 @@ public class PlayerMain : Character, IInitializeVariables
     public Transform NearestEnemyFromPlayerTrans { get => nearestEnemyFromPlayerTrans; set => nearestEnemyFromPlayerTrans = value; }
     public PlayerAnimation PlayerAnimationGetterSetter { get => playerAnimation; set => playerAnimation = value; }
     public GameObject ArrowObject { get => arrowObject; set => arrowObject = value; }
+    public RectTransform RectCircle { get => rectCircle; set => rectCircle = value; }
+    public Transform PlayerSubTransform { get => playerSubTransform; set => playerSubTransform = value; }
     #endregion
     private void Awake()
     {
@@ -134,7 +136,7 @@ public class PlayerMain : Character, IInitializeVariables
                 // Grow
                 Grow();
                 //DrawCircle
-                drawCircle.DrawCircleMethod(gameObject, rangeAttack, 1);
+                RectCircle.localScale = new Vector3(rangeAttack, rangeAttack, 1);
                 #endregion
                 // Move Player
                 FindNearestEnemy();
@@ -166,17 +168,7 @@ public class PlayerMain : Character, IInitializeVariables
                     ShowArrow();
                 }
                 #endregion
-                #region Circle foot
-                //Circle foot
-                if (nearestEnemyFromPlayerTrans != null)
-                {
-                    footTarget.transform.position = nearestEnemyFromPlayerTrans.position;
-                    footTarget.SetActive(true);
-                }else
-                {
-                    footTarget.SetActive(false);
-                }
-                #endregion
+                ShowCircleTaget();
             }
         }
         
@@ -286,7 +278,7 @@ public class PlayerMain : Character, IInitializeVariables
     {
         if(experience > 2)
         {
-            transform.localScale = new Vector3(1 + experience / 2 * 0.1f, 1 + experience / 2 * 0.1f, 1 + experience / 2 * 0.1f);// buff 10% Scale
+            playerSubTransform.localScale = new Vector3(1 + experience / 2 * 0.1f, 1 + experience / 2 * 0.1f, 1 + experience / 2 * 0.1f);// buff 10% Scale
         }
     }
     
@@ -322,14 +314,27 @@ public class PlayerMain : Character, IInitializeVariables
             Instance = this;
         }
     }
+    public void ShowCircleTaget()
+    {
+        #region Circle foot
+        //Circle foot
+        if (nearestEnemyFromPlayerTrans != null)
+        {
+            footTarget.transform.position = nearestEnemyFromPlayerTrans.position;
+            footTarget.SetActive(true);
+        }
+        else
+        {
+            footTarget.SetActive(false);
+        }
+        #endregion
+    }
     #region InitializeVariables
     public void InitializeVariables()
     {
-        drawCircle = GetComponent<DrawCircle>();
         agent = GetComponent<NavMeshAgent>();
         playerRb = GetComponent<Rigidbody>();
-        playerAnimation = GetComponent<PlayerAnimation>();
-        
+        playerAnimation = GetComponentInChildren<PlayerAnimation>();
         offsetPosAddExp = new Vector3(0, 4, 0);
         
         playerOldPos = transform.position;
@@ -345,7 +350,7 @@ public class PlayerMain : Character, IInitializeVariables
         footTarget.SetActive(false);
         //Canvas Exp
         txtExp = gameObject.GetComponentInChildren<TextMeshProUGUI>();
-        canvasExpTrans = gameObject.GetComponentsInChildren<Transform>()[1];// Because know order of Transform Child
+        canvasExpTrans = gameObject.GetComponentsInChildren<Transform>()[2];// Because know order of Transform Child
         isAddExp = false;
         //Check first attack each time idle
         isFirstAttackEveryTimeIdle = true;
@@ -364,6 +369,7 @@ public class PlayerMain : Character, IInitializeVariables
         {
             arrowObject = pointFire.GetChild(0).gameObject;
         }
+        playerSubTransform = GetComponentsInChildren<Transform>()[1];
     }
     #endregion
 }

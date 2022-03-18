@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using System;
 public class PlayerAnimation : CharaterAnimation, IInitializeVariables, ISubcribers
 {
     private PlayerMain playerMain;
@@ -45,5 +45,9 @@ public class PlayerAnimation : CharaterAnimation, IInitializeVariables, ISubcrib
     public void UnSubscribeEvent()
     {
         
+    }
+    public void AttackFromPlayerMain()
+    {
+        playerMain.Attack();
     }
 }

@@ -15,6 +15,8 @@ public class UiManager : Singleton<UiManager>, IInitializeVariables, ISubcribers
     [SerializeField] private TextMeshProUGUI txtLive;
     [SerializeField] private TextMeshProUGUI txtLevel;
     [SerializeField] private GameObject canvasGameOver;
+    [SerializeField] private GameObject canvasLive;
+    [SerializeField] private GameObject showPositionOnUi;
     public GameObject CanvasRightTop { get => canvasRightTop; set => canvasRightTop = value;}
     public GameObject CanvasCenterBoot { get => canvasCenterBoot; set => canvasCenterBoot = value;}
     public GameObject CanvasWeapon { get => canvasWeapon; set => canvasWeapon = value;}
@@ -23,6 +25,8 @@ public class UiManager : Singleton<UiManager>, IInitializeVariables, ISubcribers
     public GameObject SubCamera01 { get => subCamera01; set => subCamera01 = value;}
     public TextMeshProUGUI TxtLive { get => txtLive; set => txtLive = value;}
     public GameObject CanvasGameOver { get => canvasGameOver; set => canvasGameOver = value; }
+    public GameObject CanvasLive { get => canvasLive; set => canvasLive = value; }
+    public GameObject ShowPositionOnUi { get => showPositionOnUi; set => showPositionOnUi = value; }
     //Show count enemy
     private void Awake()
     {

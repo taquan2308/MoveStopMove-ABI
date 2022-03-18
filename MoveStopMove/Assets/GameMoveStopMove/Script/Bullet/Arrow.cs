@@ -78,7 +78,7 @@ public class Arrow : MonoBehaviour, IInitializeVariables
     }
     private void OnTriggerEnter(Collider other)
     {
-        //check attack, dèault iDOwner = 0 if not yet asign
+        //check attack, default iDOwner = 0 if not yet asign
         if (iDOwner == 0 || ((int)iDOwner - (int)other.gameObject.GetInstanceID()) == 0)
         {
             return;
@@ -86,7 +86,7 @@ public class Arrow : MonoBehaviour, IInitializeVariables
         if ( other.gameObject.CompareTag("Enemy") || other.gameObject.CompareTag("Player") && ((int)iDOwner - (int)other.gameObject.GetInstanceID()) != 0)
         {
             //
-            if (other.GetComponent<PlayerMain>() != null)
+            if (other.GetComponent<PlayerAnimation>() != null)
             {
                 GameManager.Instance.GameOver = true;
                 playerMain.DieLater();
@@ -101,11 +101,15 @@ public class Arrow : MonoBehaviour, IInitializeVariables
                 UiManager.Instance.UpdateAlives();
             }
             //
-            GameObject[] enemyArr = GameObject.FindGameObjectsWithTag("Enemy");
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            List<GameObject> enemyArr = GameManager.Instance.ListEnemy;
+            GameObject player = null;
+            if (playerMain != null)
+            {
+                player = playerMain.gameObject;
+            }
             // Increase rangeAttack and experience if look name Owner of Arrow
-            GameObject[] enemiesAll = new GameObject[enemyArr.Length + 1];
-            for (int i = 0; i < enemyArr.Length; i++)
+            GameObject[] enemiesAll = new GameObject[enemyArr.Count + 1];
+            for (int i = 0; i < enemyArr.Count; i++)
             {
                 if (gameObject.GetInstanceID() != enemyArr[i].GetInstanceID())
                 {
@@ -126,12 +130,12 @@ public class Arrow : MonoBehaviour, IInitializeVariables
             }
             foreach (GameObject obj in enemiesAll)
             {
-               
-                if(obj != null)
+                
+                if (obj != null)
                 {
-                    if(obj.GetInstanceID() == iDOwner)
+                    if (obj.GetInstanceID() == iDOwner)
                     {
-                        if(obj.GetComponent<PlayerMain>() != null)
+                        if (obj.GetComponent<PlayerMain>() != null)
                         {
                             GameManager.Instance.KilledCount += 1;
                             playerMain.RangeAttack += playerMain.RangeAttack * rangeAdd;

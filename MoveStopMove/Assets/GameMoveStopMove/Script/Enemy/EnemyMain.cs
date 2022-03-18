@@ -65,6 +65,7 @@ public class EnemyMain : Character, IInitializeVariables
     //Play Game
     [SerializeField] private bool isPlay;
     [SerializeField] private GameObject arrowObject;
+    
     //
     public bool IsPlay { get => isPlay; set => isPlay = value; }
     public float RangeAttack { get => rangeAttack; set => rangeAttack = value; }
@@ -77,17 +78,15 @@ public class EnemyMain : Character, IInitializeVariables
     public EnemyAnimation EnemyAnimation { get => enemyAnimation; set => enemyAnimation = value; }
     public GameObject ArrowObject { get => arrowObject; set => arrowObject = value; }
     //
+    
     // Controll oder execute on Update
     private bool turn01;
     private bool turn02;
     private bool turn03;
     private bool turn04;
+    
     #endregion
-    private void Awake()
-    {
-        
-    }
-
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -325,6 +324,7 @@ public class EnemyMain : Character, IInitializeVariables
             AsignDestination();
         }
     }
+    
     public void InitializeVariables()
     {
         playerMain = PlayerMain.Instance;
@@ -362,87 +362,34 @@ public class EnemyMain : Character, IInitializeVariables
         turn02 = true;
         turn03 = true;
         turn04 = true;
+        GameObject showPositionOnUi = (GameObject)Instantiate(UiManager.Instance.ShowPositionOnUi, UiManager.Instance.CanvasLive.transform);
+        showPositionOnUi.GetComponent<ShowPositionOnUi>().GetTransformEnemy(this.gameObject.transform);
     }
 }
 
-//if (isPlay)
+//public void SetPositionGoUp(Vector3 _posGoUp)
 //{
-//    if (!enemyAnimation.IsDead)
+//    posGoUp = _posGoUp;
+//}
+//private Vector3 posGoUp;
+//private bool isFirstSpawn;
+//GoUp
+//private float speedGoUp;
+//private float startTime;
+//private float journeyLength;
+//private bool isFirstTime01;
+//isFirstTime01 = false;
+//journeyLength = 2.5f;
+//if (isFirstSpawn)
+//{
+//    if (!isFirstTime01)
 //    {
-//        #region grow,exp
-//        //Grow
-//        Grow();
-//        //
-//        if (isEffect)
-//        {
-//            isEffect = false;
-//            GameObject effectAdd = SpawnArrow.Instance.Spawns(effectPrefabs);
-//            effectAdd.transform.position = transform.position;
-//            effectAdd.transform.rotation = expPrefabs.transform.rotation;
-//        }
-//        //Exp
-//        txtExp.text = experience.ToString();
-//        canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);
-//        if (isAddExp)
-//        {
-//            isAddExp = false;
-//            isEffect = false;
-//            GameObject expAdd = SpawnArrow.Instance.Spawns(expPrefabs);
-//            expAdd.transform.position = transform.position;
-//            expAdd.transform.rotation = expPrefabs.transform.rotation;
-//        }
-//        #endregion
-//        // Check Move
-//        if (!enemyAnimation.IsAttack)
-//        {
-//            FindNearestEnemy();
-//            if (timeCountdowntAttack <= 0 && nearestEnemyOtherFromThisEnemyTrans != null && isFirstAttackEveryTimeIdle)//&& isMove == false
-//            {
-//                if ((transform.position - nearestEnemyOtherFromThisEnemyTrans.position).magnitude <= rangeAttack)
-//                {
-
-//                    //Attack();
-//                    OnAttack?.Invoke();
-//                    HideArrow();
-//                    timeCountdowntAttack = timeStartAttack;
-//                    isFirstAttackEveryTimeIdle = false;
-//                }
-//            }
-//            else
-//            {
-//                timeCountdowntAttack -= Time.deltaTime;
-//                timeCountdowntAttack = Mathf.Clamp(timeCountdowntAttack, 0, Mathf.Infinity);
-//            }
-//            // check countdown idle
-//            if (timeCountdowntIdle <= 0)
-//            {
-//                if (!isRun)
-//                {
-//                    isRun = true;
-//                    OnRun?.Invoke();
-//                    AsignDestination();
-//                    timeCountdowntIdle = timeStartIdle;
-//                }
-//                // Reset isFirstAttackEveryTimeIdle
-//                isFirstAttackEveryTimeIdle = true;
-
-//            }
-//            else
-//            {
-//                timeCountdowntIdle -= Time.deltaTime;
-//            }
-//        }
-//        else
-//        {
-//            // reset countdown idle
-//            //timeCountdowntIdle = timeStartIdle;
-//        }
-
-//        if (!agent.hasPath)
-//        {
-//            isRun = false;
-//            OnIdle?.Invoke();
-//            LockOntarget();
-//        }
+//        isFirstTime01 = true;
+//        startTime = Time.time;
 //    }
+//    float distCovered = (Time.time - startTime) * speedGoUp;
+//    float fractionOfJourney = distCovered / journeyLength;
+//    //isFirstSpawn = false;
+//    transform.position = Vector3.Lerp(posGoUp, posGoUp + new Vector3(0, 2.5f, 0), fractionOfJourney);
+//    Debug.Log("ssfsd");
 //}
