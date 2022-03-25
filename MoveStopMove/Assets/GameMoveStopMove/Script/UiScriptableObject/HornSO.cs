@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 [CreateAssetMenu(fileName = "HornSO", menuName = "ScriptableObjects/HornSO")]
 public class HornSO : ScriptableObject
 {
@@ -15,4 +12,5 @@ public class HornSO : ScriptableObject
     public GameObject prefabsShield;
     public Material materialPan;
     public string nameGroup;
+    public string nameItem;
 }

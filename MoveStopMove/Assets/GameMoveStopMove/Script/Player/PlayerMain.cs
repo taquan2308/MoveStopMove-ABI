@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.AI;
 public class PlayerMain : Character, IInitializeVariables
@@ -71,7 +70,15 @@ public class PlayerMain : Character, IInitializeVariables
     //
     [SerializeField] private GameObject arrowObject;
     [SerializeField] private RectTransform rectCircle;
-    [SerializeField] private Transform playerSubTransform;
+    private Transform playerSubTransform;
+    //
+    // instalize Area Clamp Position
+    private float maxPosX;
+    private float maxPosZ;
+    private float minPosX;
+    private float minPosZ;
+    //name killed by
+    private string nameKill;
     public int Gold { get => gold; set => gold = value;}
     public bool IsPlay { get => isPlay; set => isPlay = value;}
     public Transform HeadTras { get => headTras; set => headTras = value; }
@@ -92,6 +99,7 @@ public class PlayerMain : Character, IInitializeVariables
     public GameObject ArrowObject { get => arrowObject; set => arrowObject = value; }
     public RectTransform RectCircle { get => rectCircle; set => rectCircle = value; }
     public Transform PlayerSubTransform { get => playerSubTransform; set => playerSubTransform = value; }
+    public string NameKill { get => nameKill; set => nameKill = value; }
     #endregion
     private void Awake()
     {
@@ -102,10 +110,6 @@ public class PlayerMain : Character, IInitializeVariables
     {
         InitializeVariables();//
     }
-    private void FixedUpdate()
-    {
-        //cameraPos.position = transform.position + cameraPosOffset;
-    }
     // Update is called once per frame
     void Update()
     {
@@ -113,10 +117,7 @@ public class PlayerMain : Character, IInitializeVariables
         {
             if (!playerAnimation.IsDead)
             {
-                #region Exp,Effect,grow,DrawCircle
-                //Exp
-                txtExp.text = experience.ToString();
-                canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);
+                #region Effect,grow,DrawCircle
                 if (isAddExp)
                 {
                     isAddExp = false;
@@ -142,6 +143,7 @@ public class PlayerMain : Character, IInitializeVariables
                 FindNearestEnemy();
                 if (Joystick.Direction == Vector2.zero)
                 {
+                    //agent.isStopped = true;
                     if (!playerAnimation.IsAttack)
                     {
                         OnIdle?.Invoke();
@@ -171,7 +173,11 @@ public class PlayerMain : Character, IInitializeVariables
                 ShowCircleTaget();
             }
         }
-        
+    }
+    private void LateUpdate()
+    {
+        txtExp.text = experience.ToString();
+        canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);
     }
     public override void Move()
     {
@@ -179,10 +185,18 @@ public class PlayerMain : Character, IInitializeVariables
         //override the ParentClass implementation here
         direction = Joystick.Direction;
         directionMove = new Vector3( -direction.y, 0, direction.x );
+        
         Quaternion lookRotation = Quaternion.LookRotation(directionMove);
         Vector3 rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * turnSpeed).eulerAngles;//Time.deltaTime * turnSpeed
         transform.rotation = Quaternion.Euler(0f, rotation.y, 0f);
-        transform.Translate(directionMove.normalized * Time.deltaTime * speed, Space.World);
+
+        #region Clamp Position Player
+        var pos = transform.position;
+        pos += directionMove.normalized * Time.deltaTime * speed;
+        pos.x = Mathf.Clamp(pos.x, minPosX, maxPosX);
+        pos.z = Mathf.Clamp(pos.z, minPosZ, maxPosZ);
+        transform.position = pos;
+        #endregion
     }
     public void FindNearestEnemy()
     {
@@ -221,7 +235,7 @@ public class PlayerMain : Character, IInitializeVariables
         arrow2.transform.rotation = playerso.arrowPrefabs.transform.rotation;
         if(nearestEnemyFromPlayerTrans != null)
         {
-            arrow2.GetComponent<Arrow>().SetTaget(nearestEnemyFromPlayerTrans.position, rangeAttack, gameObject.GetInstanceID());
+            arrow2.GetComponent<Arrow>().SetTaget(nearestEnemyFromPlayerTrans.position, rangeAttack, playerSubTransform.gameObject.GetInstanceID());
         }
         //Check if Arrow fire 3 direction
         if (playerso.arrowPrefabs.GetComponent<Arrow>().ArrowSO2.isThreeDirection && nearestEnemyFromPlayerTrans != null)
@@ -232,14 +246,14 @@ public class PlayerMain : Character, IInitializeVariables
             arrow3.transform.position = pointFire.position;
             arrow3.transform.rotation = playerso.arrowPrefabs.transform.rotation;
             Vector3 target3Position = transform.position + Quaternion.Euler(0, 45, 0) * (nearestEnemyFromPlayerTrans.position - transform.position);
-            arrow3.GetComponent<Arrow>().SetTaget(target3Position, rangeAttack, gameObject.GetInstanceID());
+            arrow3.GetComponent<Arrow>().SetTaget(target3Position, rangeAttack, playerSubTransform.gameObject.GetInstanceID());
             //
             // fire 3
             GameObject arrow4 = (GameObject) SpawnArrow.Instance.Spawns(playerso.arrowPrefabs);
             arrow4.transform.position = pointFire.position;
             arrow4.transform.rotation = playerso.arrowPrefabs.transform.rotation;
             Vector3 target4Position = transform.position + Quaternion.Euler(0, -45, 0) * (nearestEnemyFromPlayerTrans.position - transform.position);
-            arrow4.GetComponent<Arrow>().SetTaget(target4Position, rangeAttack, gameObject.GetInstanceID());
+            arrow4.GetComponent<Arrow>().SetTaget(target4Position, rangeAttack, playerSubTransform.gameObject.GetInstanceID());
             //
         }
     }
@@ -298,10 +312,13 @@ public class PlayerMain : Character, IInitializeVariables
     }
     public void DieLater()
     {
+        isPlay = false;
         GameManager.Instance.FootTarget.gameObject.SetActive(false);
-        gameObject.tag = "Untagged";
+        playerSubTransform.gameObject.tag = "Untagged";
+        canvasExpTrans.gameObject.SetActive(false);
         OnDead?.Invoke();
-        StartCoroutine("DelayDie");
+        UIManager.Instance.CloseUI(UIName.Joystick);
+        StartCoroutine(DelayDie());
     }
     private void InitializeSingleton()
     {
@@ -328,6 +345,21 @@ public class PlayerMain : Character, IInitializeVariables
             footTarget.SetActive(false);
         }
         #endregion
+    }
+    public void SpawnSetInforArrow()
+    {
+        if (PointFire.childCount > 0)
+        {
+            Destroy(PointFire.GetChild(0).gameObject);
+        }
+        GameObject arrow = (GameObject)Instantiate(playerso.arrowPrefabs, PointFire.position, PointFire.rotation);
+        ArrowObject = arrow;
+        arrow.GetComponent<Arrow>().enabled = false;
+        arrow.GetComponent<RoteItself>().enabled = false;
+        arrow.transform.SetParent(PointFire);
+        Vector3 offsetArrow = new Vector3(-0.23f, 0, 0);
+        arrow.transform.localPosition += offsetArrow;
+        arrow.transform.transform.Rotate(0, -90, 0, Space.Self);
     }
     #region InitializeVariables
     public void InitializeVariables()
@@ -359,10 +391,10 @@ public class PlayerMain : Character, IInitializeVariables
         //Audio
         audioSource = GetComponent<AudioSource>();
         //
-        gold = playerso.gold;
+        gold = PlayerPrefs.GetInt("GoldPlayer", 100);
         //Set no arrow at start game
         indexArrow = -1;
-        speed = 3;
+        speed = 5;
         materialWears = materialGameObject.GetComponent<SkinnedMeshRenderer>().materials;
         isPlay = GameManager.Instance.IsPlay;
         if (pointFire.childCount > 0)
@@ -370,6 +402,13 @@ public class PlayerMain : Character, IInitializeVariables
             arrowObject = pointFire.GetChild(0).gameObject;
         }
         playerSubTransform = GetComponentsInChildren<Transform>()[1];
+        //
+        maxPosX = 20;
+        maxPosZ = 16;
+        minPosX = -20;
+        minPosZ = -16;
+        //
+        SpawnSetInforArrow();
     }
     #endregion
 }

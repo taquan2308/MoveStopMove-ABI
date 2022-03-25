@@ -12,6 +12,7 @@ public class AddExp : MonoBehaviour, IInitializeVariables
     public TextMeshProUGUI TxtExp { get => txtExp; set => txtExp = value; }
     public Transform CanvasExpTrans { get => canvasExpTrans; set => canvasExpTrans = value; }
     private float t;
+    
     private void Awake()
     {
         

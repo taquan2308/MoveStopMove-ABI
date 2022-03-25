@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,21 +15,12 @@ public class Item : MonoBehaviour, IInitializeVariables
     public CanvasSkinShop CanvasSkinShop { get => canvasSkinShop; set => canvasSkinShop = value; }
     public int IndexHorn { get => indexHorn; set => indexHorn = value; }
     public GameObject LockImage { get => lockImage; set => lockImage = value; }
-    private void Awake()
+    
+    private void OnEnable()
     {
-        
+        InitializeVariables();
     }
     // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
     public void ClickBtn()
     {
         canvasSkinShop = GameObject.FindGameObjectWithTag("CanvasSkinShop").GetComponent<CanvasSkinShop>();
@@ -65,7 +54,7 @@ public class Item : MonoBehaviour, IInitializeVariables
         choseColor = new Color(1f, 1f, 1f);
         normalColor = new Color(0.8f, 0.8f, 0.8f);
         button.onClick.AddListener(ClickBtn);
-        canvasSkinShop = UiManager.Instance.CanvasSkinShop.GetComponent<CanvasSkinShop>();
+        canvasSkinShop = UIManager.Instance.GetUI(UIName.SkinShop) as CanvasSkinShop;
         playerMain = PlayerMain.Instance;
         lockImage = transform.GetChild(0).gameObject;
     }

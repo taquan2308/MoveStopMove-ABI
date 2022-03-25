@@ -1,15 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 public class EnemyAnimation : CharaterAnimation, IInitializeVariables, ISubcribers
 {
     private EnemyMain enemyMain;
     
-    void Start()
-    {
-
-    }
     private void OnEnable()
     {
         InitializeVariables();
@@ -18,11 +10,6 @@ public class EnemyAnimation : CharaterAnimation, IInitializeVariables, ISubcribe
     private void OnDisable()
     {
         UnSubscribeEvent();
-    }
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     public void InitializeVariables()
@@ -36,6 +23,7 @@ public class EnemyAnimation : CharaterAnimation, IInitializeVariables, ISubcribe
         enemyMain.OnAttack += PlayAttackAnimation;
         enemyMain.OnDance += PlayDanceAnimation;
         enemyMain.OnDead += PlayDeadAnimation;
+        enemyMain.OnDeadReverse += PlayDeadReverseAnimation;
         enemyMain.OnIdle += PlayIdleAnimation;
         enemyMain.OnRun += PlayRunAnimation;
         enemyMain.OnWin += PlayWinAnimation;
@@ -47,6 +35,7 @@ public class EnemyAnimation : CharaterAnimation, IInitializeVariables, ISubcribe
         enemyMain.OnAttack -= PlayAttackAnimation;
         enemyMain.OnDance -= PlayDanceAnimation;
         enemyMain.OnDead -= PlayDeadAnimation;
+        enemyMain.OnDeadReverse -= PlayDeadReverseAnimation;
         enemyMain.OnIdle -= PlayIdleAnimation;
         enemyMain.OnRun -= PlayRunAnimation;
         enemyMain.OnWin -= PlayWinAnimation;

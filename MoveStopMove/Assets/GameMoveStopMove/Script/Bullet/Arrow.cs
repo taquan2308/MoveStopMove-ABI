@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,10 +27,7 @@ public class Arrow : MonoBehaviour, IInitializeVariables
     public int ExperienceAdd { get => experienceAdd; set => experienceAdd = value; }
     public float DistaneToTarget { get => distaneToTarget; set => distaneToTarget = value; }
     public bool IsFirtSetUp { get => isFirtSetUp; set => isFirtSetUp = value; }
-    private void Awake()
-    {
-        
-    }
+    
     // Start is called before the first frame update
     void Start()
     {
@@ -78,6 +74,8 @@ public class Arrow : MonoBehaviour, IInitializeVariables
     }
     private void OnTriggerEnter(Collider other)
     {
+        string nameEnemyKillPlayer;
+        EnemyMain enemyMain;
         //check attack, default iDOwner = 0 if not yet asign
         if (iDOwner == 0 || ((int)iDOwner - (int)other.gameObject.GetInstanceID()) == 0)
         {
@@ -88,24 +86,26 @@ public class Arrow : MonoBehaviour, IInitializeVariables
             //
             if (other.GetComponent<PlayerAnimation>() != null)
             {
-                GameManager.Instance.GameOver = true;
+                GameManager.Instance.GameLose = true;
                 playerMain.DieLater();
             }
             if (other.GetComponent<EnemyMain>() != null)
             {
-                other.GetComponent<EnemyMain>().DieLater();
+                enemyMain = other.GetComponent<EnemyMain>();
+                enemyMain.DieLater();
             }
             if (GameManager.Instance.ListEnemy.Contains(other.gameObject))
             {
                 GameManager.Instance.ListEnemy.Remove(other.gameObject);
-                UiManager.Instance.UpdateAlives();
+                GameManager.Instance.EnemyAlive -= 1;
+                UIManager.Instance.UpdateAlives();
             }
             //
             List<GameObject> enemyArr = GameManager.Instance.ListEnemy;
             GameObject player = null;
             if (playerMain != null)
             {
-                player = playerMain.gameObject;
+                player = playerMain.PlayerSubTransform.gameObject;
             }
             // Increase rangeAttack and experience if look name Owner of Arrow
             GameObject[] enemiesAll = new GameObject[enemyArr.Count + 1];
@@ -135,7 +135,7 @@ public class Arrow : MonoBehaviour, IInitializeVariables
                 {
                     if (obj.GetInstanceID() == iDOwner)
                     {
-                        if (obj.GetComponent<PlayerMain>() != null)
+                        if (obj.GetComponent<PlayerAnimation>() != null)
                         {
                             GameManager.Instance.KilledCount += 1;
                             playerMain.RangeAttack += playerMain.RangeAttack * rangeAdd;
@@ -148,13 +148,17 @@ public class Arrow : MonoBehaviour, IInitializeVariables
                         }
                         if (obj.GetComponent<EnemyMain>() != null)
                         {
-                            EnemyMain enemyMain = obj.GetComponent<EnemyMain>();
-                            enemyMain.RangeAttack += enemyMain.RangeAttack * rangeAdd;
-                            enemyMain.Experience += 2;
-                            enemyMain.IsAddExp = true;
-                            enemyMain.IsEffect = true;
-                            enemyMain.PlayDieAudio();
-                            enemyMain.ShowArrow();
+                            EnemyMain enemyMainOwner = obj.GetComponent<EnemyMain>();
+                            enemyMainOwner.RangeAttack += enemyMainOwner.RangeAttack * rangeAdd;
+                            enemyMainOwner.Experience += 2;
+                            enemyMainOwner.IsAddExp = true;
+                            enemyMainOwner.IsEffect = true;
+                            enemyMainOwner.PlayDieAudio();
+                            if (other.GetComponent<PlayerAnimation>() != null)
+                            {
+                                GameManager.Instance.NameKillPlayer = enemyMainOwner.NameEnemy;
+                            }
+                            enemyMainOwner.ShowArrow();
                             gameObject.SetActive(false);
                         }
                     }

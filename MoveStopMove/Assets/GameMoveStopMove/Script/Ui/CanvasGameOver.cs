@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
-public class CanvasGameOver : MonoBehaviour, IInitializeVariables, ISubcribers
+public class CanvasGameOver : UICanvas, IInitializeVariables, ISubcribers
 {
     //Button
     [SerializeField] private Button exitBtn;
@@ -37,7 +37,7 @@ public class CanvasGameOver : MonoBehaviour, IInitializeVariables, ISubcribers
     }
     public void NextLevel()
     {
-        GameManager.Instance.LevelCompleted = true;
+        GameManager.Instance.NextLevel();
         playerMain.IsPlay = true;
     }
     private void OnEnable()
@@ -51,7 +51,9 @@ public class CanvasGameOver : MonoBehaviour, IInitializeVariables, ISubcribers
         retryBtn.onClick.AddListener(Retry);
         nextLevelBtn.onClick.AddListener(NextLevel);
         
-        killedTxt.text ="Killed: " + GameManager.Instance.KilledCount.ToString();
+        killedTxt.text = "Killed: " + GameManager.Instance.KilledCount.ToString();
+        //
+        nameUI = UIName.GameOver;
     }
 
     public void SubscribeEvent()

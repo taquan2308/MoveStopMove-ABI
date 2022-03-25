@@ -1,10 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
+public class CanvasSkinShop : UICanvas, IInitializeVariables
 {
     //Button
     [SerializeField] private Button exitBtn;
@@ -53,24 +52,9 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
         InitializeVariables();
         Horn();
     }
-    private void Awake()
-    {
-        
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
     public void Exit()
     {
-        UiManager.Instance.CanvasCenterBoot.SetActive(true);
+        UIManager.Instance.OpenUI(UIName.CenterBoot);
         gameObject.SetActive(false);
         CameraManager.Instance.MainCameraTrans.gameObject.SetActive(true);
         CameraManager.Instance.Sub01CameraTrans.gameObject.SetActive(false);
@@ -212,24 +196,19 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
         SpawnSetInforHorn();
         stateIndext[indexHorn] = StateEquipment.equiped;
         DeEquiped();
+        PlayerPrefs.SetInt(hornScriptableObjectChosen.nameItem, 2);// 0 = notYet, 1 = onlyPurchase, 2 = equiped
         SetEquipedVisible();
     }
   
 
     public void SpawnSetInforHorn()
     {
+        PlayerPrefs.SetInt(hornScriptableObjectChosen.nameItem, 1);
         //Horn
         if(hornScriptableObjectChosen.nameGroup == "Horn")
         {
-            if (playerMain.HeadTras.childCount > 0)
-            {
-                Transform[] items = playerMain.HeadTras.gameObject.GetComponentsInChildren<Transform>();
-                //Ignor first component of Content
-                for (int i = 1; i < items.Length; i++)
-                {
-                    Destroy(items[i].gameObject);
-                }
-            }
+            DeleteChildOfParent(playerMain.HeadTras);
+            DeleteChildOfParent(playerMain.BladeWearTras);
             GameObject item = Instantiate(hornScriptableObjectChosen.prefabsHorn, playerMain.HeadTras, false);
             if (stateIndext[indexHorn] == StateEquipment.notYet && !isAdsClick)
             {
@@ -239,6 +218,8 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
         //Short
         if(hornScriptableObjectChosen.nameGroup == "Short")
         {
+            DeleteChildOfParent(playerMain.HeadTras);
+            DeleteChildOfParent(playerMain.BladeWearTras);
             //set material
             var mats = new Material[playerMain.MaterialWears.Length];
             for (int i = 0; i < mats.Length; i++)
@@ -257,15 +238,9 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
         //Arm
         if(hornScriptableObjectChosen.nameGroup == "Arm")
         {
-            if (playerMain.HeadTras.childCount > 0)
-            {
-                Transform[] items = playerMain.ShieldWearTras.gameObject.GetComponentsInChildren<Transform>();
-                //Ignor first component of Content
-                for (int i = 1; i < items.Length; i++)
-                {
-                    Destroy(items[i].gameObject);
-                }
-            }
+            DeleteChildOfParent(playerMain.ShieldWearTras);
+            DeleteChildOfParent(playerMain.HeadTras);
+            DeleteChildOfParent(playerMain.BladeWearTras);
             GameObject item = Instantiate(hornScriptableObjectChosen.prefabsShield, playerMain.ShieldWearTras, false);
             if (stateIndext[indexHorn] == StateEquipment.notYet && !isAdsClick)
             {
@@ -287,15 +262,8 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
             {
                 if(hornScriptableObjectChosen.prefabsWing.name == "Blade")
                 {
-                    if (playerMain.BladeWearTras.childCount > 0)
-                    {
-                        Transform[] items = playerMain.ShieldWearTras.gameObject.GetComponentsInChildren<Transform>();
-                        //Ignor first component of Content
-                        for (int i = 1; i < items.Length; i++)
-                        {
-                            Destroy(items[i].gameObject);
-                        }
-                    }
+                    DeleteChildOfParent(playerMain.HeadTras);
+                    DeleteChildOfParent(playerMain.BladeWearTras);
                     GameObject item = Instantiate(hornScriptableObjectChosen.prefabsWing, playerMain.BladeWearTras, false);
                 }
             }
@@ -303,24 +271,8 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
             {
                 if (hornScriptableObjectChosen.prefabsHorn.name == "Hat_Thor")
                 {
-                    if (playerMain.BladeWearTras.childCount > 0)
-                    {
-                        Transform[] items = playerMain.BladeWearTras.gameObject.GetComponentsInChildren<Transform>();
-                        //Ignor first component of Content
-                        for (int i = 1; i < items.Length; i++)
-                        {
-                            Destroy(items[i].gameObject);
-                        }
-                    }
-                    if (playerMain.HeadTras.childCount > 0)
-                    {
-                        Transform[] items = playerMain.HeadTras.gameObject.GetComponentsInChildren<Transform>();
-                        //Ignor first component of Content
-                        for (int i = 1; i < items.Length; i++)
-                        {
-                            Destroy(items[i].gameObject);
-                        }
-                    }
+                    DeleteChildOfParent(playerMain.BladeWearTras);
+                    DeleteChildOfParent(playerMain.HeadTras);
                     GameObject item = Instantiate(hornScriptableObjectChosen.prefabsHorn, playerMain.HeadTras, false);
                 }
             }
@@ -338,6 +290,13 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
             if (i != indexHorn && stateIndext[i] == StateEquipment.equiped)
             {
                 stateIndext[i] = StateEquipment.onlyPurchase;
+                foreach (var item in arrayHornSO)
+                {
+                    if (item.nameItem != hornScriptableObjectChosen.nameItem && PlayerPrefs.GetInt(item.nameItem) == 2)
+                    {
+                        PlayerPrefs.SetInt(item.nameItem, 1);// 0 = notYet, 1 = onlyPurchase, 2 = equiped
+                    }
+                }
             }
         }
     }
@@ -364,13 +323,36 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
         equipedTxt.gameObject.SetActive(false);
         selectTxt.gameObject.SetActive(true);
     }
-
+    //
+    public void DeleteChildOfParent(Transform _transformParentToFormat)
+    {
+        if (_transformParentToFormat.childCount > 0)
+        {
+            Transform[] items = _transformParentToFormat.gameObject.GetComponentsInChildren<Transform>();
+            //Ignor first component of Content
+            for (int i = 1; i < items.Length; i++)
+            {
+                Destroy(items[i].gameObject);
+            }
+        }
+    }
     public void InitializeVariables()
     {
         stateIndext = new StateEquipment[arrayHornSO.Length];
         for (int i = 0; i < arrayHornSO.Length; i++)
         {
-            stateIndext[i] = StateEquipment.notYet;
+            if (PlayerPrefs.GetInt(arrayHornSO[i].nameItem) == 1)// 0 = notYet, 1 = onlyPurchase, 2 = equiped
+            {
+                stateIndext[i] = StateEquipment.onlyPurchase;
+            }
+            else if (PlayerPrefs.GetInt(arrayHornSO[i].nameItem) == 2)// 0 = notYet, 1 = onlyPurchase, 2 = equiped
+            {
+                stateIndext[i] = StateEquipment.equiped;
+            }
+            else
+            {
+                stateIndext[i] = StateEquipment.notYet;
+            }
         }
         listBtnItem = new List<Button>();
         choseColor = new Color(1f, 1f, 1f);
@@ -394,5 +376,7 @@ public class CanvasSkinShop : MonoBehaviour, IInitializeVariables
         //
         isSeenAds = false;
         arrButtonGroup = new Button[] { hornBtn, shortBtn, armBtn, skinBtn };
+        //
+        nameUI = UIName.SkinShop;
     }
 }

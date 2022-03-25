@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-
+using System.Collections;
 public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
 {
     [SerializeField] private RectTransform parent;
@@ -29,8 +27,8 @@ public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
     private Vector3 playerPosition;
     public void InitializeVariables()
     {
-        height = 1920;
-        with = 1080;
+        height = Screen.height;
+        with = Screen.width;
         image = GetComponentsInChildren<RectTransform>()[1];
         mainCamera = CameraManager.Instance.MainCameraTrans.gameObject.GetComponent<Camera>();
         //pointCenterLook = GetComponentsInChildren<RectTransform>()[6];
@@ -40,7 +38,7 @@ public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
         iconLevelTrans = GetComponentsInChildren<RectTransform>()[3];
         //y +-800
         //x +- 400
-        a = 100;
+        a = (int)with/10;
         offSet9h = new Vector3(a, 0, 0);
         offSet1h = new Vector3(-a, -a, 0);
         offSet11h = new Vector3(a, -a, 0);
@@ -49,9 +47,7 @@ public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
         offSet5h = new Vector3(-a, a, 0);
         offSet6h = new Vector3(0, a, 0);
         offSet7h = new Vector3(a, a, 0);
-
         cameraPosOffset = new Vector3(15f, 15f, 0);
-        
     }
 
     // Start is called before the first frame update
@@ -82,9 +78,9 @@ public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
         Vector2 enemySeen2D = new Vector2(enemySeen.x, enemySeen.y);
         Vector2 enemychuanhoa = new Vector2(0, 0);
         float a1 = (centerPos.x * enemySeen.y - centerPos.y * enemySeen.x);
-        float a2 = 50;
-        float a3 = with - 50;
-        float a4 = height - 50;
+        float a2 = a/2;
+        float a3 = with - a/2;
+        float a4 = height - a/2;
         float a5 = enemySeen.x - centerPos.x;
         float a6 = enemySeen.y - centerPos.y;
         if (enemySeen.x >= 0 && enemySeen.x <= with && enemySeen.y >= 0 && enemySeen.y <= height)
@@ -144,11 +140,8 @@ public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
         RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, enemychuanhoa, mainCamera, out anchoPos);
         image.anchoredPosition = anchoPos;
 
-        ////image.LookAt(centerPos);
         Vector3 dirCenterToIcon = pointCenterLook.position - image.transform.position;
         Quaternion lookRotation = Quaternion.LookRotation(dirCenterToIcon);
-        ////Vector3 rotation = Quaternion.Lerp(transform.rotation, lookRotation, Time.deltaTime * 0).eulerAngles;
-        //image.transform.rotation = Quaternion.RotateTowards(image.transform.rotation, lookRotation, 20);
         image.transform.rotation = lookRotation;
         //
         CheckActive();
@@ -205,3 +198,7 @@ public class ShowPositionOnUi : MonoBehaviour,IInitializeVariables
         }
     }
 }
+
+//float a2 = 50;
+//float a3 = with - 50;
+//float a4 = height - 50;

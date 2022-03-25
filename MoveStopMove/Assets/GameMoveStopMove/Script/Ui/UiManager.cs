@@ -1,81 +1,169 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class UiManager : Singleton<UiManager>, IInitializeVariables, ISubcribers
+public enum UIName {Setting, Play, GameOver, SkinShop, WeaponChose, CenterBoot, RightTop, Joystick, Lose, Live}
+public class UIManager : Singleton<UIManager>, IInitializeVariables, ISubcribers
 {
-    // Canvas Object
-    [SerializeField] private GameObject canvasRightTop;
-    [SerializeField] private GameObject canvasCenterBoot;
-    [SerializeField] private GameObject canvasWeapon;
-    [SerializeField] private GameObject canvasSkinShop;
-    [SerializeField] private GameObject mainCamera;
-    [SerializeField] private GameObject subCamera01;
+    
+    public Dictionary<UIName, UICanvas> canvasPrefabs = new Dictionary<UIName, UICanvas>();
+    public Dictionary<UIName, UICanvas> canvasManagers = new Dictionary<UIName, UICanvas>();
+    private Transform parent;
     [SerializeField] private TextMeshProUGUI txtLive;
     [SerializeField] private TextMeshProUGUI txtLevel;
-    [SerializeField] private GameObject canvasGameOver;
-    [SerializeField] private GameObject canvasLive;
     [SerializeField] private GameObject showPositionOnUi;
-    public GameObject CanvasRightTop { get => canvasRightTop; set => canvasRightTop = value;}
-    public GameObject CanvasCenterBoot { get => canvasCenterBoot; set => canvasCenterBoot = value;}
-    public GameObject CanvasWeapon { get => canvasWeapon; set => canvasWeapon = value;}
-    public GameObject CanvasSkinShop { get => canvasSkinShop; set => canvasSkinShop = value;}
-    public GameObject MainCamera { get => mainCamera; set => mainCamera = value;}
-    public GameObject SubCamera01 { get => subCamera01; set => subCamera01 = value;}
-    public TextMeshProUGUI TxtLive { get => txtLive; set => txtLive = value;}
-    public GameObject CanvasGameOver { get => canvasGameOver; set => canvasGameOver = value; }
-    public GameObject CanvasLive { get => canvasLive; set => canvasLive = value; }
+    [SerializeField] private GameObject canvasLive;
+    //
+    [SerializeField] private UICanvas canvasCenterBoot;
+    [SerializeField] private UICanvas canvasGameOver;
+    [SerializeField] private UICanvas canvasGameLose;
+    [SerializeField] private UICanvas canvasSkinShop;
+    [SerializeField] private UICanvas canvasWeapon;
+    [SerializeField] private UICanvas canvasRightTop;
+    [SerializeField] private UICanvas canvasJoystick;
+    [SerializeField] private UICanvas canvasLiveUI;
+    [SerializeField] private UICanvas canvasSetting;
+
+    public TextMeshProUGUI TxtLive { get => txtLive; set => txtLive = value; }
     public GameObject ShowPositionOnUi { get => showPositionOnUi; set => showPositionOnUi = value; }
-    //Show count enemy
-    private void Awake()
-    {
-        
-    }
-    // Start is called before the first frame update
+    public GameObject CanvasLive { get => canvasLive; set => canvasLive = value; }
+
     void Start()
     {
+        InitializeVariables();
         SubscribeEvent();
     }
-    private void Update()
+    public void OpenUI(UIName name)
     {
+        UICanvas canvas = null;
+        if (!canvasManagers.ContainsKey(name) || canvasManagers[name] == null)
+        {
+            canvas = Instantiate(canvasPrefabs[name], parent);
+            canvasManagers.Add(name, canvas);
+        }
+        else
+        {
+            canvas = canvasManagers[name];
+        }
+        canvas.OnInit();
+        canvas.Open();
+    }
+    public void CloseUI(UIName name)
+    {
+        if (canvasManagers.ContainsKey(name))
+        {
+            canvasManagers[name].Close();
+        }
+    }
+    public bool IsOpenedUI(UIName name)
+    {
+        bool isOpen = false;
         
+        if (canvasManagers.ContainsKey(name))
+        {
+            if (canvasManagers[name].gameObject.activeSelf)
+            {
+                isOpen = true;
+            }
+        }
+        return isOpen;
     }
-    private void OnEnable()
+    public UICanvas GetUI(UIName name)
     {
-        InitializeVariables();
+        UICanvas canvas = null;
+        
+        if (canvasManagers.ContainsKey(name))
+        {
+            canvas = canvasManagers[name];
+        }
+        else
+        {
+            Debug.Log("Can't find UI...");
+        }
+        return null;
     }
-
-    public void InitializeVariables()
+    public UICanvas GetUIPrefabs(UIName name)
     {
-        canvasRightTop.SetActive(true);
-        canvasCenterBoot.SetActive(true);
-        canvasWeapon.SetActive(false);
-        canvasSkinShop.SetActive(false);
-        canvasSkinShop.SetActive(false);
-        canvasGameOver.SetActive(false);
+        UICanvas canvas = null;
+        
+        if (canvasPrefabs.ContainsKey(name))
+        {
+            canvas = canvasPrefabs[name];
+        }
+        else
+        {
+            Debug.Log("Can't find UI...");
+        }
+        return canvas;
     }
-    public void UpdateAlives()
-    {
-        txtLive.text = "Alive: " + GameManager.Instance.ListEnemy.Count.ToString();
-    }
-    public void ShowCanvasGameOver()
-    {
-        canvasGameOver.SetActive(true);
-    }
-    public void GameStarted(int currentLevel)
-    {
-        txtLevel.text = "LEVEL " + currentLevel.ToString();
-    }
+    //
     public void SubscribeEvent()
     {
         GameManager.Instance.OnGameStarted += GameStarted;
-        GameManager.Instance.OnGameOver += ShowCanvasGameOver;
+        GameManager.Instance.OnLevelCompleted += ShowCanvasGameOver;
+        GameManager.Instance.OnLevelCompleted += HideCanvasJoystick;
+        GameManager.Instance.OnGameLose += ShowCanvasGameLose;
+        GameManager.Instance.OnGameLose += HideCanvasJoystick;
     }
 
     public void UnSubscribeEvent()
     {
         GameManager.Instance.OnGameStarted -= GameStarted;
-        GameManager.Instance.OnGameOver -= ShowCanvasGameOver;
+        GameManager.Instance.OnLevelCompleted -= ShowCanvasGameOver;
+        GameManager.Instance.OnLevelCompleted -= HideCanvasJoystick;
+        GameManager.Instance.OnGameLose -= HideCanvasJoystick;
+        GameManager.Instance.OnGameLose -= ShowCanvasGameLose;
+    }
+    //
+    public void UpdateAlives()
+    {
+        txtLive.text = "Alive: " + GameManager.Instance.EnemyAlive.ToString();
+    }
+    public void ShowCanvasGameOver()
+    {
+        OpenUI(UIName.GameOver);
+    }
+    public void GameStarted(int currentLevel)
+    {
+        txtLevel.text = "LEVEL " + currentLevel.ToString();
+    }
+    public void ShowCanvasGameLose()
+    {
+        OpenUI(UIName.Lose);
+    }
+    public void HideCanvasJoystick()
+    {
+        CloseUI(UIName.Joystick);
+    }
+    public void InitializeVariables()
+    {
+        canvasManagers.Add(UIName.CenterBoot, canvasCenterBoot);
+        canvasManagers.Add(UIName.GameOver, canvasGameOver);
+        canvasManagers.Add(UIName.SkinShop, canvasSkinShop);
+        canvasManagers.Add(UIName.WeaponChose, canvasWeapon);
+        canvasManagers.Add(UIName.RightTop, canvasRightTop);
+        canvasManagers.Add(UIName.Joystick, canvasJoystick);
+        canvasManagers.Add(UIName.Lose, canvasGameLose);
+        canvasManagers.Add(UIName.Live, canvasLiveUI);
+        canvasManagers.Add(UIName.Setting, canvasSetting);
+        OpenUI(UIName.RightTop);
+        OpenUI(UIName.CenterBoot);
+        OpenUI(UIName.Live);
+        CloseUI(UIName.WeaponChose);
+        CloseUI(UIName.SkinShop);
+        CloseUI(UIName.GameOver);
+        CloseUI(UIName.Lose);
+        CloseUI(UIName.Joystick);
+        CloseUI(UIName.Setting);
+        txtLevel.text = "LEVEL " + GameManager.Instance.CurrentLevel.ToString();
     }
 }
+
+//private void Awake()
+//{
+//    UICanvas[] canvas = Resources.LoadAll<UICanvas>("UI/");
+//    for (int i = 0; i < canvas.Length; i++)
+//    {
+//        canvasPrefabs.Add(canvas[i].nameUI, canvas[i]);
+//    }
+//}

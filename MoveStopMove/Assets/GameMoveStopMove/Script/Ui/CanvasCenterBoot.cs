@@ -1,39 +1,51 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class CanvasCenterBoot : MonoBehaviour, IInitializeVariables
+public class CanvasCenterBoot : UICanvas, IInitializeVariables
 {
     private PlayerMain playerMain;
     [SerializeField] private Button weaponBtn;
     [SerializeField] private Button skinBtn;
     [SerializeField] private Button playBtn;
     private Vector3 offsetSubCamera;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    private Animator animCanvsCenterBoot;
     private void OnEnable()
     {
         InitializeVariables();
     }
     public void Play()
     {
-        if(playerMain == null)
+        StartCoroutine(DelayPlay());
+    }
+    public void Weapon()
+    {
+        UIManager.Instance.OpenUI(UIName.WeaponChose);
+        gameObject.SetActive(false);
+    }
+    public void Skin()
+    {
+        UIManager.Instance.OpenUI(UIName.SkinShop);
+        gameObject.SetActive(false);
+        PlayerMain.Instance.PlayerAnimationGetterSetter.PlayDanceAnim();
+        CameraManager.Instance.Sub01CameraGameObj.SetActive(true);
+        CameraManager.Instance.Sub01CameraTrans.position = playerMain.transform.position + offsetSubCamera;
+        CameraManager.Instance.MainCameraGameObj.SetActive(false);
+    }
+
+    IEnumerator DelayPlay()
+    {
+        animCanvsCenterBoot.SetTrigger("Out");
+        yield return new WaitForSeconds(1);
+        if (playerMain == null)
         {
             playerMain = PlayerMain.Instance;
         }
         playerMain.IsPlay = true;
         gameObject.SetActive(false);
         GameManager.Instance.GameStarted = true;
+        UIManager.Instance.OpenUI(UIName.Joystick);
+        UIManager.Instance.CloseUI(UIName.RightTop);
         foreach (var enemy in GameManager.Instance.ListEnemy)
         {
             if (enemy != null)
@@ -41,21 +53,12 @@ public class CanvasCenterBoot : MonoBehaviour, IInitializeVariables
                 enemy.GetComponent<EnemyMain>().IsPlay = true;
             }
         }
+        UIManager.Instance.OpenUI(UIName.Joystick);
     }
-    public void Weapon()
+     public void SetAnimationOut()
     {
-        UiManager.Instance.CanvasWeapon.SetActive(true);
-        gameObject.SetActive(false);
+        animCanvsCenterBoot.SetTrigger("Out");
     }
-    public void Skin()
-    {
-        UiManager.Instance.CanvasSkinShop.SetActive(true);
-        gameObject.SetActive(false);
-        UiManager.Instance.SubCamera01.SetActive(true);
-        UiManager.Instance.SubCamera01.transform.position = playerMain.transform.position + offsetSubCamera;
-        UiManager.Instance.MainCamera.SetActive(false);
-    }
-
     public void InitializeVariables()
     {
         playerMain = PlayerMain.Instance;
@@ -63,5 +66,8 @@ public class CanvasCenterBoot : MonoBehaviour, IInitializeVariables
         playBtn.onClick.AddListener(Play);
         weaponBtn.onClick.AddListener(Weapon);
         skinBtn.onClick.AddListener(Skin);
+        nameUI = UIName.CenterBoot;
+        animCanvsCenterBoot = GetComponent<Animator>();
+        animCanvsCenterBoot.SetTrigger("In");
     }
 }

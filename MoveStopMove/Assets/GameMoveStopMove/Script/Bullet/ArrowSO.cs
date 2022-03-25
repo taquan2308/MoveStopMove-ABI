@@ -12,4 +12,5 @@ public class ArrowSO : ScriptableObject
     public bool isThreeDirection;
     public Sprite iconArrow;
     public int priceArrow;
+    public string nameArrow;
 }

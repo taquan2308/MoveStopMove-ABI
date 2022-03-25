@@ -1,10 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class CanvasWeapon : MonoBehaviour, IInitializeVariables
+public class CanvasWeapon : UICanvas, IInitializeVariables
 {
     //Button
     [SerializeField] private Button exitBtn;
@@ -45,15 +44,14 @@ public class CanvasWeapon : MonoBehaviour, IInitializeVariables
     public int PriceArrow { get => priceArrow; set => priceArrow = value; }
     public ArrowSO ArrowScriptableObjectChosen { get => arrowScriptableObjectChosen; set => arrowScriptableObjectChosen = value; }
     public StateEquipment[] StateIndext { get => stateIndext; set => stateIndext = value; }
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        
+        InitializeVariables();
     }
     public void Exit()
     {
         gameObject.SetActive(false);
-        UiManager.Instance.CanvasCenterBoot.SetActive(true);
+        UIManager.Instance.OpenUI(UIName.CenterBoot);
     }
     public void Before()
     {
@@ -114,6 +112,7 @@ public class CanvasWeapon : MonoBehaviour, IInitializeVariables
     }
     public void SpawnSetInforArrow()
     {
+        PlayerPrefs.SetInt(arrowScriptableObjectChosen.nameArrow, 1);// 0 = notYet, 1 = onlyPurchase, 2 = equiped
         GameObject arrow = (GameObject)Instantiate(ArrowScriptableObjectChosen.arrowPrefabs, playerMain.PointFire.position, playerMain.PointFire.rotation);
         playerMain.ArrowObject = arrow;
         arrow.GetComponent<Arrow>().enabled = false;
@@ -151,6 +150,13 @@ public class CanvasWeapon : MonoBehaviour, IInitializeVariables
             if(i != indexArrow && stateIndext[i] == StateEquipment.equiped)
             {
                 stateIndext[i] = StateEquipment.onlyPurchase;
+                foreach (var item in arrowList)
+                {
+                    if (item.nameArrow != arrowScriptableObjectChosen.nameArrow && PlayerPrefs.GetInt(item.nameArrow) == 2)
+                    {
+                        PlayerPrefs.SetInt(item.nameArrow, 1);// 0 = notYet, 1 = onlyPurchase, 2 = equiped
+                    }
+                }
             }
         }
     }
@@ -164,11 +170,12 @@ public class CanvasWeapon : MonoBehaviour, IInitializeVariables
         SpawnSetInforArrow();
         stateIndext[indexArrow] = StateEquipment.equiped;
         DeEquiped();
+        PlayerPrefs.SetInt(arrowScriptableObjectChosen.nameArrow, 2);// 0 = notYet, 1 = onlyPurchase, 2 = equiped
         SetEquipedVisible();
     }
     private void OnEnable()
     {
-        InitializeVariables();
+        //InitializeVariables();
     }
     public void InitializeVariables()
     {
@@ -188,8 +195,21 @@ public class CanvasWeapon : MonoBehaviour, IInitializeVariables
         stateIndext = new StateEquipment[arrowList.Length];
         for (int i = 0; i < arrowList.Length; i++)
         {
-            stateIndext[i] = StateEquipment.notYet;
+            if (PlayerPrefs.GetInt(arrowList[i].nameArrow) == 1)// 0 = notYet, 1 = onlyPurchase, 2 = equiped
+            {
+                stateIndext[i] = StateEquipment.onlyPurchase;
+            }
+            else if (PlayerPrefs.GetInt(arrowList[i].nameArrow) == 2)// 0 = notYet, 1 = onlyPurchase, 2 = equiped
+            {
+                stateIndext[i] = StateEquipment.equiped;
+            }
+            else
+            {
+                stateIndext[i] = StateEquipment.notYet;
+            }
         }
         isAdsClick = false;
+        //
+        nameUI = UIName.SkinShop;
     }
 }

@@ -1,10 +1,9 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
 using UnityEngine.AI;
+using Random = System.Random;
 
 public class EnemyMain : Character, IInitializeVariables
 {
@@ -14,11 +13,11 @@ public class EnemyMain : Character, IInitializeVariables
     public event Action OnAttack = delegate { };
     public event Action OnDance = delegate { };
     public event Action OnDead = delegate { };
+    public event Action OnDeadReverse = delegate { };
     public event Action OnIdle = delegate { };
     public event Action OnRun = delegate { };
     public event Action OnUlti = delegate { };
     public event Action OnWin = delegate { };
-    //*********************************************************************
     private NavMeshAgent agent;
     private Rigidbody enemyRb;
     [HideInInspector] public Vector3 enemyOldPos;
@@ -32,6 +31,7 @@ public class EnemyMain : Character, IInitializeVariables
     private Transform nearestEnemyOtherFromThisEnemyTrans;
     [SerializeField] private float rangeAttack;
     [SerializeField] private int experience;
+    [SerializeField] private string nameEnemy;
     [SerializeField] private EnemySO enemySO;
     [SerializeField] private Transform pointFire;
     [SerializeField] private float timeStartAttack;
@@ -44,6 +44,7 @@ public class EnemyMain : Character, IInitializeVariables
     private Vector3 pointToGo;
     //Exp Canvas
     private TextMeshProUGUI txtExp;
+    private TextMeshProUGUI txtNameEnemy;
     private Transform canvasExpTrans;
     private bool isAddExp;
     [SerializeField] private GameObject expPrefabs;
@@ -65,7 +66,7 @@ public class EnemyMain : Character, IInitializeVariables
     //Play Game
     [SerializeField] private bool isPlay;
     [SerializeField] private GameObject arrowObject;
-    
+    private bool isSpawn;
     //
     public bool IsPlay { get => isPlay; set => isPlay = value; }
     public float RangeAttack { get => rangeAttack; set => rangeAttack = value; }
@@ -77,14 +78,8 @@ public class EnemyMain : Character, IInitializeVariables
     public Transform NearestEnemyOtherFromThisEnemyTrans { get => nearestEnemyOtherFromThisEnemyTrans; set => nearestEnemyOtherFromThisEnemyTrans = value; }
     public EnemyAnimation EnemyAnimation { get => enemyAnimation; set => enemyAnimation = value; }
     public GameObject ArrowObject { get => arrowObject; set => arrowObject = value; }
-    //
-    
-    // Controll oder execute on Update
-    private bool turn01;
-    private bool turn02;
-    private bool turn03;
-    private bool turn04;
-    
+    public bool IsSpawn { get => isSpawn; set => isSpawn = value; }
+    public string NameEnemy { get => nameEnemy; set => nameEnemy = value; }
     #endregion
     
     // Start is called before the first frame update
@@ -96,6 +91,14 @@ public class EnemyMain : Character, IInitializeVariables
     // Update is called once per frame
     void Update()
     {
+        if (!isSpawn)
+        {
+            isSpawn = true;
+            //get name
+            nameEnemy = GameManager.Instance.ArrayName[GameManager.Instance.IndexName++];
+            txtNameEnemy.text = nameEnemy;
+            //
+        }
         if (isPlay)
         {
             if (!enemyAnimation.IsDead)
@@ -111,9 +114,7 @@ public class EnemyMain : Character, IInitializeVariables
                     effectAdd.transform.position = transform.position;
                     effectAdd.transform.rotation = expPrefabs.transform.rotation;
                 }
-                //Exp
-                txtExp.text = experience.ToString();
-                canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);
+                
                 if (isAddExp)
                 {
                     isAddExp = false;
@@ -128,54 +129,48 @@ public class EnemyMain : Character, IInitializeVariables
                 if (!agent.hasPath)
                 {
                     LockOntarget();
-                    if (nearestEnemyOtherFromThisEnemyTrans != null)
+                    if (timeCountdowntIdle > 0)
                     {
-                        if ((transform.position - nearestEnemyOtherFromThisEnemyTrans.position).magnitude <= rangeAttack)
+                        timeCountdowntIdle -= Time.deltaTime;
+                        //
+                        if (!enemyAnimation.IsAttack)
                         {
-                        }
-                    }
-                            
-                    if (!enemyAnimation.IsAttack)
-                    {
-                        OnIdle?.Invoke();
-                        if(nearestEnemyOtherFromThisEnemyTrans != null)
-                        {
-                            bool isOnrange = (transform.position - nearestEnemyOtherFromThisEnemyTrans.position).magnitude 
-                                <= rangeAttack;
-                            if (timeCountdowntAttack <= 0 && isOnrange && isFirstAttackEveryTimeIdle)
+                            OnIdle?.Invoke();
+                            if (nearestEnemyOtherFromThisEnemyTrans != null)// neu co enemy
                             {
-                                isFirstAttackEveryTimeIdle = false;
-                                OnAttack?.Invoke();
-                                HideArrow();
-                                timeCountdowntAttack = timeStartAttack;
+                                bool isOnrange = (transform.position - nearestEnemyOtherFromThisEnemyTrans.position).magnitude
+                                    <= rangeAttack;
+                                if (timeCountdowntAttack <= 0 && isOnrange && isFirstAttackEveryTimeIdle)//neu trong tam
+                                {
+                                    isFirstAttackEveryTimeIdle = false;
+                                    OnAttack?.Invoke();
+                                    HideArrow();
+                                    timeCountdowntAttack = timeStartAttack;
+                                }
+                                else// neu ko trong tam, hoac chua hoi chieu, da nem
+                                {
+                                    timeCountdowntAttack -= Time.deltaTime;
+                                    timeCountdowntAttack = Mathf.Clamp(timeCountdowntAttack, 0, Mathf.Infinity);
+                                }
                             }
-                            else
+                            else// neu ko co enemy
                             {
-                                timeCountdowntIdle = timeStartIdle;
-                                isFirstAttackEveryTimeIdle = true;
-                                OnRun?.Invoke();
-                                AsignDestination();
+                                OnIdle?.Invoke();
+                                timeCountdowntIdle -= Time.deltaTime;
+                                timeCountdowntIdle = Mathf.Clamp(timeCountdowntIdle, 0, Mathf.Infinity);
+                                timeCountdowntAttack -= Time.deltaTime;
+                                timeCountdowntAttack = Mathf.Clamp(timeCountdowntAttack, 0, Mathf.Infinity);
                             }
                         }
                     }
                     else
                     {
-                        if(timeCountdowntIdle <= 0)
-                        {
-                            timeCountdowntIdle = timeStartIdle;
-                            isFirstAttackEveryTimeIdle = true;
-                            OnRun?.Invoke();
-                            AsignDestination();
-                        }
-                        else
-                        {
-                            timeCountdowntIdle -= Time.deltaTime;
-                            //OnIdle?.Invoke();
-                        }
-                        timeCountdowntAttack -= Time.deltaTime;
-                        timeCountdowntAttack = Mathf.Clamp(timeCountdowntAttack, 0, Mathf.Infinity);
+                        //
+                        OnRun?.Invoke();
+                        AsignDestination();
+                        timeCountdowntIdle = timeStartIdle;
+                        isFirstAttackEveryTimeIdle = true;
                     }
-                    // check countdown idle
                 }
                 else
                 {
@@ -185,6 +180,12 @@ public class EnemyMain : Character, IInitializeVariables
                 }
             }
         }
+    }
+    private void LateUpdate()
+    {
+        //Exp
+        txtExp.text = experience.ToString();
+        canvasExpTrans.eulerAngles = new Vector3(0, 90, 0);
     }
     public void ShowArrow()
     {
@@ -291,9 +292,6 @@ public class EnemyMain : Character, IInitializeVariables
         }
     }
     
-    //End Set state function
-    //Set Dead from out of Class
-    
     //
     public void PlayAttackAudio()
     {
@@ -313,9 +311,12 @@ public class EnemyMain : Character, IInitializeVariables
     }
     public void DieLater()
     {
-        gameObject.tag = "Untagged";
+        isPlay = false;
         OnDead?.Invoke();
-        StartCoroutine("DelayDie");
+        gameObject.tag = "Untagged";
+        agent.isStopped = true;
+        canvasExpTrans.gameObject.SetActive(false);
+        StartCoroutine(DelayDie());
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -324,7 +325,16 @@ public class EnemyMain : Character, IInitializeVariables
             AsignDestination();
         }
     }
-    
+    IEnumerator CallDeadInverse()
+    {
+        OnDeadReverse?.Invoke();
+        yield return new WaitForSeconds(0.1f);
+        isPlay = true;
+    }
+    public void StartDeadInverse()
+    {
+        StartCoroutine(CallDeadInverse());
+    }
     public void InitializeVariables()
     {
         playerMain = PlayerMain.Instance;
@@ -342,10 +352,15 @@ public class EnemyMain : Character, IInitializeVariables
         timeCountdowntIdle = timeStartIdle;
         // initialization 
         turnSpeed = enemySO.turnSpeed;
+        // get radom level
+        Random rnd = new Random();
+        experience = rnd.Next(0, 4);
+        //
         // get radompoint and going this
         randomPoints = GetComponent<RandomPoints>();
         //canvas
         txtExp = gameObject.GetComponentInChildren<TextMeshProUGUI>();
+        txtNameEnemy = gameObject.GetComponentsInChildren<TextMeshProUGUI>()[1];
         canvasExpTrans = gameObject.GetComponentsInChildren<Transform>()[1];
         isAddExp = false;
         // Set State
@@ -357,39 +372,9 @@ public class EnemyMain : Character, IInitializeVariables
         isPlay = GameManager.Instance.IsPlay;
         GameManager.Instance.ListEnemy.Add(this.gameObject);//
         isRun = false;
-        //
-        turn01 = true;
-        turn02 = true;
-        turn03 = true;
-        turn04 = true;
-        GameObject showPositionOnUi = (GameObject)Instantiate(UiManager.Instance.ShowPositionOnUi, UiManager.Instance.CanvasLive.transform);
+        GameObject showPositionOnUi = (GameObject)Instantiate(UIManager.Instance.ShowPositionOnUi, UIManager.Instance.CanvasLive.transform);
         showPositionOnUi.GetComponent<ShowPositionOnUi>().GetTransformEnemy(this.gameObject.transform);
+        //
+        isSpawn = false;
     }
 }
-
-//public void SetPositionGoUp(Vector3 _posGoUp)
-//{
-//    posGoUp = _posGoUp;
-//}
-//private Vector3 posGoUp;
-//private bool isFirstSpawn;
-//GoUp
-//private float speedGoUp;
-//private float startTime;
-//private float journeyLength;
-//private bool isFirstTime01;
-//isFirstTime01 = false;
-//journeyLength = 2.5f;
-//if (isFirstSpawn)
-//{
-//    if (!isFirstTime01)
-//    {
-//        isFirstTime01 = true;
-//        startTime = Time.time;
-//    }
-//    float distCovered = (Time.time - startTime) * speedGoUp;
-//    float fractionOfJourney = distCovered / journeyLength;
-//    //isFirstSpawn = false;
-//    transform.position = Vector3.Lerp(posGoUp, posGoUp + new Vector3(0, 2.5f, 0), fractionOfJourney);
-//    Debug.Log("ssfsd");
-//}

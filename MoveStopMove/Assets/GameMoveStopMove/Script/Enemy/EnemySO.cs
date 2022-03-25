@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 [CreateAssetMenu(fileName = "EnemySO", menuName = "ScriptableObjects/EnemySO")]
 public class EnemySO : ScriptableObject
@@ -10,4 +8,5 @@ public class EnemySO : ScriptableObject
     public float turnSpeed;
     public int experience;
     public float timeIdleStart;
+    public string nameEnemy;
 }

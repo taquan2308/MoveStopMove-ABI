@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariables
@@ -19,6 +17,17 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
     private PlayerMain playerMain;
     //Point Center to check 4 coner
     [SerializeField] private Transform pointCenterMapTrans;
+    //
+    private float timeStart;
+    private float timeCountdown00;
+    private float timeCountdown01;
+    private float timeCountdown02;
+    private float timeCountdown03;
+    //
+    private int[] arr;
+    //
+    private float maxDistancePlayerToPointSpawn;
+    public GameObject[] ArrEnemyPrefabs { get => arrEnemyPrefabs; set => arrEnemyPrefabs = value; }
     protected override void Awake()
     {
         base.Awake();
@@ -34,14 +43,16 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
         {
             playerMain = PlayerMain.Instance;
         }
-        InvokeRepeating("Check", 0, 1.5f);
     }
     // Update is called once per frame
-    
+    private void Update()
+    {
+        Check();
+    }
     public void Check()
     {
         // Check To Spaw
-        if (GameManager.Instance.ListEnemy.Count < maxEnemyInMapNow && isSpawn && indexPrefabsInArrSpawn < arrEnemyPrefabs.Length)
+        if (GameManager.Instance.ListEnemy.Count < maxEnemyInMapNow && isSpawn && indexPrefabsInArrSpawn < arrEnemyPrefabs.Length )
         {
             isSpawn = false;
             SpawEnemy();
@@ -49,6 +60,7 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
         if (!isSpawn)
         {
             isSpawn = true;
+            indextOfCornerHasLeastEnemy = -1;
             topLeft = 0;
             topRight = 0;
             bootLeft = 0;
@@ -58,10 +70,14 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
     public void SpawEnemy()
     {
         FindCornerToSpaw();
-        GameObject enemySpawed = (GameObject)Instantiate(arrEnemyPrefabs[indexPrefabsInArrSpawn], arrayTransformPoints[indextOfCornerHasLeastEnemy].position, transform.rotation);
-        StartCoroutine(delay(enemySpawed));// because conflict order inistalize isPlay two time so delay set bool to actualy isPlay = true
-        indexPrefabsInArrSpawn += 1;
-        isSpawn = false;
+        if (indextOfCornerHasLeastEnemy != -1)
+        {
+            GameObject enemySpawed = (GameObject)Instantiate(arrEnemyPrefabs[indexPrefabsInArrSpawn], arrayTransformPoints[indextOfCornerHasLeastEnemy].position, transform.rotation);
+            enemySpawed.GetComponent<EnemyMain>().StartDeadInverse();
+            //StartCoroutine(delay(enemySpawed));// because conflict order inistalize isPlay two time so delay set bool to actualy isPlay = true
+            indexPrefabsInArrSpawn += 1;
+            isSpawn = false;
+        }
     }
     #region FindCornerToSpaw
     public void FindCornerToSpaw() 
@@ -75,7 +91,7 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
                     topLeft += 1;
                     if (playerMain != null)
                     {
-                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[0].position) <= 4)
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[0].position) <= maxDistancePlayerToPointSpawn)
                         {
                             topLeft += 1000;
                         }
@@ -86,7 +102,7 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
                     topRight += 1;
                     if (playerMain != null)
                     {
-                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[1].position) <= 4)
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[1].position) <= maxDistancePlayerToPointSpawn)
                         {
                             topRight += 1000;
                         }
@@ -97,7 +113,7 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
                     bootRight += 1;
                     if (playerMain != null)
                     {
-                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[2].position) <= 4)
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[2].position) <= maxDistancePlayerToPointSpawn)
                         {
                             bootRight += 1000;
                         }
@@ -106,36 +122,73 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
                 else if (enemy.transform.position.z < pointCenterMapTrans.position.z && enemy.transform.position.x > pointCenterMapTrans.position.x)
                 {
                     bootLeft += 1;
-                    //Debug.Log(playerMain);
                     if (playerMain != null)
                     {
-                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[3].position) <= 4)
+                        if (Vector3.Magnitude(playerMain.gameObject.transform.position - arrayTransformPoints[3].position) <= maxDistancePlayerToPointSpawn)
                         {
                             bootLeft += 1000;
                         }
-                        //Debug.Log(topLeft + "   " + topRight + "   " + bootRight + "   " + bootLeft);
                     }
                 }
-                
             }
         }
+        arr = new int[] { topLeft, topRight, bootLeft, bootRight };
+        arr = SortArrayIncrease(arr);
+        int minCorner = arr[0];
+        if (minCorner == topLeft)
+        {
+            if(timeCountdown00 <= 0)
+            {
+                indextOfCornerHasLeastEnemy = 0;
+                timeCountdown00 = timeStart;
+            }
+            else
+            {
+                minCorner = arr[1];
+            }
+        }
+        else if (minCorner == topRight)
+        {
+            if (timeCountdown01 <= 0)
+            {
+                indextOfCornerHasLeastEnemy = 1;
+                timeCountdown01 = timeStart;
+            }
+            else
+            {
+                minCorner = arr[2];
+            }
+        }
+        else if (minCorner == bootRight)
+        {
+            if (timeCountdown02 <= 0)
+            {
+                indextOfCornerHasLeastEnemy = 2;
+                timeCountdown02 = timeStart;
+            }
+            else
+            {
+                minCorner = arr[3];
+            }
+        }
+        else if (minCorner == bootLeft)
+        {
+            if (timeCountdown03 <= 0)
+            {
+                indextOfCornerHasLeastEnemy = 3;
+                timeCountdown03 = timeStart;
+            }
+        }
+        //
+        timeCountdown00 -= Time.deltaTime;
+        timeCountdown00 = Mathf.Clamp(timeCountdown00, 0, Mathf.Infinity);
+        timeCountdown01 -= Time.deltaTime;
+        timeCountdown01 = Mathf.Clamp(timeCountdown01, 0, Mathf.Infinity);
+        timeCountdown02 -= Time.deltaTime;
+        timeCountdown02 = Mathf.Clamp(timeCountdown02, 0, Mathf.Infinity);
+        timeCountdown03 -= Time.deltaTime;
+        timeCountdown03 = Mathf.Clamp(timeCountdown03, 0, Mathf.Infinity);
         // find indextOfCornerHasLeastEnemy
-        if (Mathf.Min(topLeft, topRight, bootLeft, bootRight) == topLeft)
-        {
-            indextOfCornerHasLeastEnemy = 0;
-        }
-        else if (Mathf.Min(topLeft, topRight, bootLeft, bootRight) == topRight)
-        {
-            indextOfCornerHasLeastEnemy = 1;
-        }
-        else if (Mathf.Min(topLeft, topRight, bootLeft, bootRight) == bootRight)
-        {
-            indextOfCornerHasLeastEnemy = 2;
-        }
-        else if (Mathf.Min(topLeft, topRight, bootLeft, bootRight) == bootLeft)
-        {
-            indextOfCornerHasLeastEnemy = 3;
-        }
     }
     #endregion
     public void InitializeVariables()
@@ -147,14 +200,30 @@ public class SpawnEnemyManager : Singleton<SpawnEnemyManager>, IInitializeVariab
         topRight = 0;
         bootLeft = 0;
         bootRight = 0;
-        indextOfCornerHasLeastEnemy = 1;
-    }
-    IEnumerator delay(GameObject _gameObject)
+        indextOfCornerHasLeastEnemy = -1;
+        //
+        timeStart = 2.5f;
+        timeCountdown00 = 0;
+        timeCountdown01 = 0;
+        timeCountdown02 = 0;
+        timeCountdown03 = 0;
+        maxDistancePlayerToPointSpawn = 5;
+}
+    public int[] SortArrayIncrease(int[] _array)
     {
-        yield return new WaitForSeconds(1.5f);
-        if(_gameObject != null)
+        int lenght = _array.Length;
+        for (int i = 0; i < lenght; i++)
         {
-            _gameObject.GetComponent<EnemyMain>().IsPlay = true;
+            for (int j = i + 1; j < lenght; j++)
+            {
+                if (_array[i] > _array[j])
+                {
+                    int temp = _array[i];
+                    _array[i] = _array[j];
+                    _array[j] = temp;
+                }
+            }
         }
+        return _array;
     }
 }

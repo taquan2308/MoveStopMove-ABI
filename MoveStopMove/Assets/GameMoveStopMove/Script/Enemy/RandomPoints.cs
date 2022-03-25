@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class RandomPoints : MonoBehaviour, IInitializeVariables
@@ -61,12 +59,12 @@ public class RandomPoints : MonoBehaviour, IInitializeVariables
 
     public void InitializeVariables()
     {
-        radiusOut = 15;
-        radiusIn = 6;
-        maxPosX = 40;
-        maxPosZ = 10;
-        minPosX = -10;
-        minPosZ = -40;
+        radiusOut = 10;
+        radiusIn = 3;
+        maxPosX = 20;
+        maxPosZ = 16;
+        minPosX = -20;
+        minPosZ = -16;
         isFindDone = false;
         RadiusObstacle = 3;
     }
